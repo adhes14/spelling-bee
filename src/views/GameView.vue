@@ -110,18 +110,25 @@ const setupGame = () => {
   const word = wordString.value
   if (!word) return
 
-  // Initialize solved map to false
+  // Initialize solved map. Spaces are pre-solved so the user doesn't drag/type them.
   for (let i = 0; i < word.length; i++) {
-    solvedSlots.value[i] = false
+    if (word[i] === ' ') {
+      solvedSlots.value[i] = true
+    } else {
+      solvedSlots.value[i] = false
+    }
   }
 
   if (gameStore.currentSublevel <= 2) {
-    // Collect letters of the word
-    const lettersArr = word.split('').map((l, index) => ({
-      id: `letter-${l}-${index}`,
-      letter: l,
-      isDistractor: false
-    }))
+    // Collect letters of the word (excluding spaces)
+    const lettersArr = word
+      .split('')
+      .map((l, index) => ({
+        id: `letter-${l}-${index}`,
+        letter: l,
+        isDistractor: false
+      }))
+      .filter(item => item.letter !== ' ')
 
     // Add distractors for level 2
     if (gameStore.currentSublevel === 2) {
@@ -150,6 +157,8 @@ const setupGame = () => {
     // Shuffle letters
     poolLetters.value = shuffleArray(lettersArr)
   }
+
+  findNextSlot()
 
   // Proactively say the word shortly after view setup
   setTimeout(() => {

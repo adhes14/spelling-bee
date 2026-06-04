@@ -62,6 +62,9 @@ const layout = [
     { label: 'N', value: 'n', type: 'letter' },
     { label: 'M', value: 'm', type: 'letter' },
     { label: '✓', value: 'enter', type: 'action' }
+  ],
+  [
+    { label: 'ESPACIO', value: ' ', type: 'space' }
   ]
 ]
 
@@ -135,6 +138,15 @@ const handleKeyPress = (key) => {
 .key-btn.action[value="enter"] {
   background: linear-gradient(180deg, var(--color-accent-purple) 0%, #7c3aed 100%);
   border-bottom-color: #5b21b6;
+}
+
+/* Space Key styling */
+.key-btn.space {
+  max-width: 260px;
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  border-bottom-color: #1e3a8a;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
 }
 
 .key-icon {

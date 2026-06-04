@@ -7,12 +7,16 @@
       class="slot-wrapper"
       :class="{ 
         'is-solved': solvedSlots[index],
-        'is-active': activeSlotIndex === index && !solvedSlots[index]
+        'is-active': activeSlotIndex === index && !solvedSlots[index],
+        'is-space': char === ' '
       }"
     >
+      <!-- If space, render as empty visual separator -->
+      <div v-if="char === ' '" class="space-separator"></div>
+
       <!-- If solved, show the green letter block -->
       <LetterBlock 
-        v-if="solvedSlots[index]" 
+        v-else-if="solvedSlots[index]" 
         :letter="char" 
         status="correct"
       />
@@ -45,6 +49,7 @@ const initSlots = () => {
 
   // Create a Sortable instance for each unsolved slot
   for (let i = 0; i < props.word.length; i++) {
+    if (props.word[i] === ' ') continue // Skip space separators
     if (props.solvedSlots[i]) continue
 
     const slotEl = document.getElementById(`slot-${i}`)
@@ -160,6 +165,15 @@ onUnmounted(() => {
   opacity: 0;
 }
 
+.space-separator {
+  width: 20px;
+  height: 56px;
+}
+
+.slot-wrapper.is-space {
+  width: 20px;
+}
+
 /* Responsive adjustment */
 @media (max-width: 360px) {
   .slot-wrapper {
@@ -169,6 +183,10 @@ onUnmounted(() => {
   .empty-slot {
     width: 44px;
     height: 44px;
+  }
+  .space-separator, .slot-wrapper.is-space {
+    width: 12px;
+    height: 48px;
   }
 }
 </style>
