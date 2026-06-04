@@ -1,0 +1,144 @@
+/* Reset & Base Rules */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+:root {
+  /* Palette: Night sky theme, premium and children friendly */
+  --color-bg-deep: #080721;
+  --color-bg-sky: linear-gradient(180deg, #09092d 0%, #15144c 100%);
+  --color-bg-card: rgba(25, 25, 78, 0.8);
+  --color-bg-card-border: rgba(168, 85, 247, 0.3);
+  
+  --color-accent-star: #ffd700;
+  --color-accent-gold: #ffb800;
+  --color-accent-purple: #a855f7;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-pink: #ec4899;
+  
+  --color-letter-blue: #3b82f6;
+  --color-letter-green: #10b981;
+  --color-letter-red: #ef4444;
+  --color-text-light: #f3f4f6;
+  --color-text-dim: #9ca3af;
+  
+  --font-main: 'Baloo 2', system-ui, -apple-system, sans-serif;
+  --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-letter: 0 6px 0px rgba(0, 0, 0, 0.25);
+  
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-light);
+  font-family: var(--font-main);
+  font-size: 16px;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+/* Global Utility Layouts */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px; /* Max mobile width */
+  height: 100%;
+  margin: 0 auto;
+  background: var(--color-bg-sky);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Twinkling Star Background Animation */
+.stars-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background-image: 
+    radial-gradient(1.5px 1.5px at 20px 30px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 150px 120px, #a855f7, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 220px 60px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2.5px 2.5px at 280px 180px, #ffd700, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 310px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 380px 140px, #06b6d4, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 400px 400px;
+  animation: starsTwinkle 10s infinite linear;
+  opacity: 0.6;
+}
+
+@keyframes starsTwinkle {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-400px); }
+}
+
+/* Shake Animation for incorrect drop */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+/* Pulse animation for star unlock */
+@keyframes pulsePop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pop-in {
+  animation: pulsePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Glassmorphism card styles */
+.glass-panel {
+  background: var(--color-bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-bg-card-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-premium);
+}
+
+/* Nice bouncy button animation */
+.btn-bouncy {
+  font-family: var(--font-main);
+  font-weight: 700;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-bouncy:active {
+  transform: translateY(4px);
+}
