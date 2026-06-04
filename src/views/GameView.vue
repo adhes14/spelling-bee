@@ -7,7 +7,7 @@
       </button>
       
       <div class="word-progress-badge">
-        Palabra {{ gameStore.currentWordIndex + 1 }} de {{ gameStore.filteredWords.length }}
+        Word {{ gameStore.currentWordIndex + 1 }} of {{ gameStore.filteredWords.length }}
       </div>
 
       <ErrorCounter :count="gameStore.errorCount" />
@@ -17,13 +17,13 @@
     <main class="game-arena">
       <!-- Active Level Indicator badge -->
       <div class="level-indicator" :class="`level-${gameStore.currentSublevel}`">
-        Subnivel {{ gameStore.currentSublevel }} - {{ levelName }}
+        Sublevel {{ gameStore.currentSublevel }} - {{ levelName }}
       </div>
 
       <!-- Play Word Audio Button -->
       <div class="audio-trigger-wrapper">
         <AudioButton :word="wordString" />
-        <p class="audio-hint">Toca para escuchar</p>
+        <p class="audio-hint">Tap to listen</p>
       </div>
 
       <!-- Gameplay layout -->
@@ -41,7 +41,7 @@
         <WritingLine 
           v-else
           :value="typedText"
-          placeholder="Escribe la palabra..."
+          placeholder="Type the word..."
         />
       </div>
     </main>
@@ -84,9 +84,9 @@ const { playSuccessSound, playErrorSound, playClickSound } = useAudioFeedback()
 
 const wordString = computed(() => gameStore.currentWordObj?.word || '')
 const levelName = computed(() => {
-  if (gameStore.currentSublevel === 1) return 'Fácil'
-  if (gameStore.currentSublevel === 2) return 'Medio'
-  return 'Avanzado'
+  if (gameStore.currentSublevel === 1) return 'Easy'
+  if (gameStore.currentSublevel === 2) return 'Medium'
+  return 'Advanced'
 })
 
 // Sublevel 1 & 2 states
@@ -265,7 +265,7 @@ const triggerShake = () => {
 }
 
 const confirmQuit = () => {
-  if (confirm('¿Quieres salir al menú principal? Perderás el progreso de esta palabra.')) {
+  if (confirm('Do you want to quit to the main menu? You will lose progress for this word.')) {
     gameStore.reset()
     router.push({ name: 'home' })
   }

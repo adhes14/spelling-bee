@@ -64,7 +64,7 @@ const layout = [
     { label: '✓', value: 'enter', type: 'action' }
   ],
   [
-    { label: 'ESPACIO', value: ' ', type: 'space' }
+    { label: 'SPACE', value: ' ', type: 'space' }
   ]
 ]
 

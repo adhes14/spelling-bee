@@ -8,12 +8,12 @@
         <span class="highlight">Bee</span>
         <span class="kids">Kids</span>
       </h1>
-      <p class="subtitle">¡Aprende jugando!</p>
+      <p class="subtitle">Learn and Play!</p>
     </div>
 
     <!-- Category selector list -->
     <div class="categories-panel glass-panel">
-      <h2 class="panel-title">Elige una Categoría</h2>
+      <h2 class="panel-title">Choose a Category</h2>
       <div class="categories-grid">
         <button 
           v-for="cat in categories" 
@@ -31,7 +31,7 @@
     <!-- Parent zone shortcut -->
     <div class="footer-actions">
       <button class="btn-parents" @click="openParentsZone">
-        <span class="icon">⚙️</span> Zona de Padres
+        <span class="icon">⚙️</span> Parents Zone
       </button>
     </div>
   </div>
@@ -51,7 +51,7 @@ const selectCategory = (catId) => {
 }
 
 const openParentsZone = () => {
-  alert('Zona de Padres: Protegida en la Fase 2 (Reto Matemático).')
+  alert('Parents Zone: Protected in Phase 2 (Math Challenge).')
 }
 </script>
 
@@ -62,14 +62,15 @@ const openParentsZone = () => {
   padding: calc(2rem + var(--safe-area-top)) 1.5rem calc(1.5rem + var(--safe-area-bottom));
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
   z-index: 1;
+  overflow-y: auto;
 }
 
 .logo-container {
   text-align: center;
   margin-top: 1rem;
+  flex-shrink: 0;
 }
 
 .bee-badge {
@@ -108,6 +109,7 @@ const openParentsZone = () => {
 .game-title .kids {
   font-size: 1.5rem;
   background: linear-gradient(90deg, var(--color-accent-pink), var(--color-accent-cyan));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-top: 0.25rem;
@@ -128,6 +130,7 @@ const openParentsZone = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .panel-title {
@@ -182,6 +185,9 @@ const openParentsZone = () => {
   width: 100%;
   display: flex;
   justify-content: center;
+  margin-top: auto;
+  padding-top: 1rem;
+  flex-shrink: 0;
 }
 
 .btn-parents {

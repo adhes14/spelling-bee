@@ -1,10 +1,10 @@
 export const categories = [
-  { id: 'places', name: 'Lugares', icon: '✈️', color: 'var(--color-accent-cyan)' },
-  { id: 'music', name: 'Música', icon: '🎵', color: 'var(--color-accent-pink)' },
-  { id: 'sports', name: 'Deportes', icon: '⚽', color: 'var(--color-accent-purple)' },
-  { id: 'time', name: 'Tiempo', icon: '⏰', color: 'var(--color-accent-star)' },
-  { id: 'feelings', name: 'Sentimientos', icon: '😊', color: 'var(--color-accent-pink)' },
-  { id: 'daily', name: 'Vida Diaria', icon: '🏡', color: 'var(--color-accent-cyan)' }
+  { id: 'places', name: 'Places', icon: '✈️', color: 'var(--color-accent-cyan)' },
+  { id: 'music', name: 'Music', icon: '🎵', color: 'var(--color-accent-pink)' },
+  { id: 'sports', name: 'Sports', icon: '⚽', color: 'var(--color-accent-purple)' },
+  { id: 'time', name: 'Time', icon: '⏰', color: 'var(--color-accent-star)' },
+  { id: 'feelings', name: 'Feelings', icon: '😊', color: 'var(--color-accent-pink)' },
+  { id: 'daily', name: 'Daily Life', icon: '🏡', color: 'var(--color-accent-cyan)' }
 ]
 
 export const words = [

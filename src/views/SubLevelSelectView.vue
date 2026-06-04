@@ -2,7 +2,7 @@
   <div class="sublevel-select-view">
     <!-- Header with Back Button and Active Category Title -->
     <header class="header">
-      <button class="btn-back" @click="goBack" aria-label="Volver">
+      <button class="btn-back" @click="goBack" aria-label="Back">
         ⬅️
       </button>
       <div class="category-indicator" :style="{ '--cat-color': gameStore.currentCategory?.color }">
@@ -13,13 +13,13 @@
 
     <!-- Levels list -->
     <div class="levels-container">
-      <h1 class="page-title">Elige tu Nivel</h1>
+      <h1 class="page-title">Choose your Level</h1>
       
       <div class="levels-grid">
         <SubLevelCard 
           :level="1"
-          title="Fácil"
-          description="Arrastra las letras a sus casillas correspondientes."
+          title="Easy"
+          description="Drag the letters to their matching boxes."
           :stars-count="1"
           color="var(--color-accent-cyan)"
           icon="🎈"
@@ -28,8 +28,8 @@
 
         <SubLevelCard 
           :level="2"
-          title="Medio"
-          description="Encuentra las letras correctas entre letras distractoras."
+          title="Medium"
+          description="Find the correct letters among distractor letters."
           :stars-count="2"
           color="var(--color-accent-pink)"
           icon="🚀"
@@ -38,8 +38,8 @@
 
         <SubLevelCard 
           :level="3"
-          title="Avanzado"
-          description="Escucha con atención y escribe usando el teclado."
+          title="Advanced"
+          description="Listen carefully and write using the keyboard."
           :stars-count="3"
           color="var(--color-accent-purple)"
           icon="🧠"
@@ -50,7 +50,7 @@
 
     <!-- Info banner -->
     <footer class="footer-tip">
-      💡 Intenta ganar 3 estrellas en cada nivel
+      💡 Try to earn 3 stars on each level
     </footer>
   </div>
 </template>

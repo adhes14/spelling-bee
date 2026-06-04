@@ -3,7 +3,7 @@
     class="btn-audio btn-bouncy" 
     :class="{ speaking: speaking }"
     @click="speak"
-    aria-label="Escuchar palabra"
+    aria-label="Listen to word"
   >
     <span class="speaker-icon">🔊</span>
     <span class="pulse-ring"></span>

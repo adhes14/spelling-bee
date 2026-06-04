@@ -12,7 +12,7 @@
     <div class="results-card glass-panel pop-in" :style="{ animationDelay: '200ms' }">
       <!-- Target Spelt Word display -->
       <div class="word-reveal">
-        <p class="reveal-label">Escribiste:</p>
+        <p class="reveal-label">You spelled:</p>
         <h2 class="word-text">{{ wordString.toUpperCase() }}</h2>
       </div>
 
@@ -26,7 +26,7 @@
       <!-- Score details -->
       <div class="score-details">
         <span class="detail-item">
-          ❌ Errores: <strong>{{ gameStore.errorCount }}</strong>
+          ❌ Mistakes: <strong>{{ gameStore.errorCount }}</strong>
         </span>
       </div>
     </div>
@@ -34,16 +34,16 @@
     <!-- Actions Panel -->
     <div class="actions-panel pop-in" :style="{ animationDelay: '400ms' }">
       <button class="btn-action next btn-bouncy" @click="goNextWord">
-        Siguiente palabra ➡️
+        Next word ➡️
       </button>
 
       <div class="secondary-actions">
         <button class="btn-action retry btn-bouncy" @click="retryWord">
-          🔄 Volver a intentar
+          🔄 Try again
         </button>
         
         <button class="btn-action home btn-bouncy" @click="goToMenu">
-          🏠 Niveles
+          🏠 Levels
         </button>
       </div>
     </div>
@@ -70,9 +70,9 @@ const celebrationEmoji = computed(() => {
 })
 
 const celebrationText = computed(() => {
-  if (gameStore.stars === 3) return '¡Increíble!'
-  if (gameStore.stars === 2) return '¡Muy Bien!'
-  return '¡Terminado!'
+  if (gameStore.stars === 3) return 'Amazing!'
+  if (gameStore.stars === 2) return 'Well Done!'
+  return 'Completed!'
 })
 
 const goNextWord = () => {

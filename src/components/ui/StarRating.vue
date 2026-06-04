@@ -12,9 +12,9 @@
       </span>
     </div>
     <div v-if="showLabel && stars > 0" class="rating-label pop-in" :style="{ animationDelay: '600ms' }">
-      <span v-if="stars === 3" class="gold-text">🏆 ¡Perfecto! Estampita de Oro</span>
-      <span v-else-if="stars === 2" class="silver-text">🥈 ¡Muy bien! Estampita de Plata</span>
-      <span v-else class="bronze-text">🥉 ¡Sigue intentando! Estampita de Bronce</span>
+      <span v-if="stars === 3" class="gold-text">🏆 Perfect! Gold Sticker</span>
+      <span v-else-if="stars === 2" class="silver-text">🥈 Well Done! Silver Sticker</span>
+      <span v-else class="bronze-text">🥉 Keep Trying! Bronze Sticker</span>
     </div>
   </div>
 </template>
