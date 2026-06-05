@@ -35,4 +35,9 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
+// Initialize IndexedDB Dictionary Store (Paso 2.1 & 2.2 in PRD)
+import { useDictionaryStore } from '@/stores/dictionaryStore'
+const dictionaryStore = useDictionaryStore(pinia)
+dictionaryStore.init()
+
 app.mount('#app')

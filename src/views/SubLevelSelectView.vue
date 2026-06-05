@@ -20,7 +20,7 @@
           :level="1"
           title="Easy"
           description="Drag the letters to their matching boxes."
-          :stars-count="1"
+          :stars-count="level1Stars"
           color="var(--color-accent-cyan)"
           icon="🎈"
           @select="selectLevel(1)"
@@ -30,7 +30,7 @@
           :level="2"
           title="Medium"
           description="Find the correct letters among distractor letters."
-          :stars-count="2"
+          :stars-count="level2Stars"
           color="var(--color-accent-pink)"
           icon="🚀"
           @select="selectLevel(2)"
@@ -40,7 +40,7 @@
           :level="3"
           title="Advanced"
           description="Listen carefully and write using the keyboard."
-          :stars-count="3"
+          :stars-count="level3Stars"
           color="var(--color-accent-purple)"
           icon="🧠"
           @select="selectLevel(3)"
@@ -56,12 +56,17 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
 import SubLevelCard from '@/components/ui/SubLevelCard.vue'
 
 const router = useRouter()
 const gameStore = useGameStore()
+
+const level1Stars = ref(0)
+const level2Stars = ref(0)
+const level3Stars = ref(0)
 
 const goBack = () => {
   gameStore.reset()
@@ -73,6 +78,12 @@ const selectLevel = (level) => {
   gameStore.startWord()
   router.push({ name: 'game' })
 }
+
+onMounted(async () => {
+  level1Stars.value = await gameStore.getSublevelProgress(1)
+  level2Stars.value = await gameStore.getSublevelProgress(2)
+  level3Stars.value = await gameStore.getSublevelProgress(3)
+})
 </script>
 
 <style scoped>

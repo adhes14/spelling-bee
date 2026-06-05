@@ -16,11 +16,11 @@
       <h2 class="panel-title">Choose a Category</h2>
       <div class="categories-grid">
         <button 
-          v-for="cat in categories" 
-          :key="cat.id"
+          v-for="cat in dictionaryStore.categories" 
+          :key="cat.id_cat || cat.id"
           class="category-card"
           :style="{ '--card-color': cat.color }"
-          @click="selectCategory(cat.id)"
+          @click="selectCategory(cat.id_cat || cat.id)"
         >
           <span class="cat-icon">{{ cat.icon }}</span>
           <span class="cat-name">{{ cat.name }}</span>
@@ -40,10 +40,11 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
-import { categories } from '@/data/words'
+import { useDictionaryStore } from '@/stores/dictionaryStore'
 
 const router = useRouter()
 const gameStore = useGameStore()
+const dictionaryStore = useDictionaryStore()
 
 const selectCategory = (catId) => {
   gameStore.setCategory(catId)
@@ -51,7 +52,7 @@ const selectCategory = (catId) => {
 }
 
 const openParentsZone = () => {
-  alert('Parents Zone: Protected in Phase 2 (Math Challenge).')
+  router.push({ name: 'parents' })
 }
 </script>
 

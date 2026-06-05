@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { words, categories } from '@/data/words'
+import { useDictionaryStore } from './dictionaryStore'
+import { db } from '@/db/db'
 
 export const useGameStore = defineStore('game', () => {
+  const dictionaryStore = useDictionaryStore()
+
   const currentCategory = ref(null)
   const currentSublevel = ref(1) // 1 = Easy, 2 = Medium, 3 = Hard
   const currentWordIndex = ref(0)
@@ -13,7 +16,8 @@ export const useGameStore = defineStore('game', () => {
   // Filter words by active category
   const filteredWords = computed(() => {
     if (!currentCategory.value) return []
-    return words.filter(w => w.category === currentCategory.value.id)
+    const catId = currentCategory.value.id_cat || currentCategory.value.id
+    return dictionaryStore.words.filter(w => w.category === catId)
   })
 
   // Get active word object
@@ -25,7 +29,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Set category
   function setCategory(catId) {
-    const cat = categories.find(c => c.id === catId)
+    const cat = dictionaryStore.categories.find(c => c.id_cat === catId || c.id === catId)
     currentCategory.value = cat || null
     currentWordIndex.value = 0
   }
@@ -60,7 +64,62 @@ export const useGameStore = defineStore('game', () => {
     } else {
       stars.value = 1
     }
+
+    if (currentWordObj.value) {
+      const catId = currentCategory.value.id_cat || currentCategory.value.id
+      saveProgress(currentWordObj.value.word, catId, currentSublevel.value, stars.value)
+    }
+
     gamePhase.value = 'result'
+  }
+
+  // Save progress to IndexedDB
+  async function saveProgress(word, category, sublevel, starsObtained) {
+    try {
+      const existing = await db.progreso_usuario
+        .where({ word, category, sublevel })
+        .first()
+
+      if (existing) {
+        // Keep the best score
+        if (starsObtained > existing.stars) {
+          await db.progreso_usuario.update(existing.id, {
+            stars: starsObtained,
+            completedAt: new Date()
+          })
+        }
+      } else {
+        await db.progreso_usuario.add({
+          word,
+          category,
+          sublevel,
+          stars: starsObtained,
+          completedAt: new Date()
+        })
+      }
+    } catch (error) {
+      console.error('Failed to save progress in DB:', error)
+    }
+  }
+
+  // Get average stars earned for a sublevel in the current category
+  async function getSublevelProgress(sublevel) {
+    if (!currentCategory.value) return 0
+    const catId = currentCategory.value.id_cat || currentCategory.value.id
+    try {
+      const records = await db.progreso_usuario
+        .where({ category: catId, sublevel })
+        .toArray()
+
+      if (records.length === 0) return 0
+      
+      // Calculate average stars
+      const sum = records.reduce((acc, r) => acc + r.stars, 0)
+      return Math.round(sum / records.length)
+    } catch (error) {
+      console.error('Error fetching sublevel progress:', error)
+      return 0
+    }
   }
 
   // Next word
@@ -101,6 +160,7 @@ export const useGameStore = defineStore('game', () => {
     incrementError,
     finishWord,
     nextWord,
-    reset
+    reset,
+    getSublevelProgress
   }
 })

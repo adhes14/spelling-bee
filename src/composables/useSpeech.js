@@ -70,6 +70,7 @@ export function useSpeech() {
   return {
     isSupported,
     speaking,
+    speak,
     speakWord,
     speakLetter
   }

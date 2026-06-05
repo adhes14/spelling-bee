@@ -4,6 +4,7 @@ import HomeView from '@/views/HomeView.vue'
 import SubLevelSelectView from '@/views/SubLevelSelectView.vue'
 import GameView from '@/views/GameView.vue'
 import ResultView from '@/views/ResultView.vue'
+import ParentsView from '@/views/ParentsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +52,11 @@ const router = createRouter({
           next()
         }
       }
+    },
+    {
+      path: '/parents',
+      name: 'parents',
+      component: ParentsView
     },
     {
       path: '/:pathMatch(.*)*',
