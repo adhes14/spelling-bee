@@ -68,12 +68,8 @@ defineProps({
   box-shadow: 0 8px 15px rgba(0,0,0,0.4);
 }
 
-/* Distractors slightly styled differently, but mostly normal */
-.letter-block.is-distractor {
-  /* Give distractors slightly alternate hues so they blend in but look fun */
-  background: linear-gradient(135deg, var(--color-accent-purple) 0%, #6d28d9 100%);
-  box-shadow: 0 4px 0 #4c1d95, 0 6px 10px rgba(0,0,0,0.3);
-}
+/* Distractor letters should look identical to regular letters to increase the challenge,
+   so no custom styling is applied for .is-distractor anymore. */
 
 /* Make it look smaller on tiny mobile screens */
 @media (max-width: 360px) {
