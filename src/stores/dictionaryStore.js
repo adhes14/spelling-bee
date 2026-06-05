@@ -12,19 +12,30 @@ export const useDictionaryStore = defineStore('dictionary', () => {
     sessionWordLimit: 10
   })
 
+  let initPromise = null
+
   // Initialize DB and load all records
   async function init() {
-    isLoading.value = true
-    try {
-      // Ensure seed data is populated
-      await seedDatabase()
-      await loadAll()
-      await loadSettings()
-    } catch (error) {
-      console.error('Failed to initialize dictionary store:', error)
-    } finally {
-      isLoading.value = false
+    if (initPromise) {
+      return initPromise
     }
+
+    initPromise = (async () => {
+      isLoading.value = true
+      try {
+        // Ensure seed data is populated
+        await seedDatabase()
+        await loadAll()
+        await loadSettings()
+      } catch (error) {
+        console.error('Failed to initialize dictionary store:', error)
+        initPromise = null // Allow retrying if failed
+      } finally {
+        isLoading.value = false
+      }
+    })()
+
+    return initPromise
   }
 
   async function loadSettings() {
