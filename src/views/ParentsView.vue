@@ -55,6 +55,13 @@
           >
             📋 Manage Words
           </button>
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeTab === 'config' }"
+            @click="activeTab = 'config'"
+          >
+            ⚙️ Config
+          </button>
         </nav>
 
         <!-- Tab Content -->
@@ -276,7 +283,44 @@
                 </div>
               </div>
             </div>
+          </div>
+          
+          <!-- TAB 3: CONFIGURATION -->
+          <div v-if="activeTab === 'config'" class="config-tab-content">
+            <div class="config-group">
+              <label class="config-label">Word Difficulty Filter:</label>
+              <select 
+                v-model="wordDifficultyFilter" 
+                @change="updateConfig"
+                class="select-input"
+              >
+                <option value="easy">🟢 Easy Words Only (Recommended for beginners)</option>
+                <option value="easy,medium">🟡 Easy + Medium Words</option>
+                <option value="easy,medium,hard">🔴 All Words (No restrictions)</option>
+              </select>
+              <p class="config-helper">
+                Controls the maximum difficulty level of words shown to children in gameplay.
+              </p>
+            </div>
 
+            <div class="config-group">
+              <label class="config-label">Session Word Limit:</label>
+              <div class="slider-container">
+                <input 
+                  type="range" 
+                  v-model="sessionWordLimit" 
+                  min="5" 
+                  max="20" 
+                  step="1"
+                  @change="updateConfig"
+                  class="config-slider"
+                />
+                <span class="slider-val">{{ sessionWordLimit }} words</span>
+              </div>
+              <p class="config-helper">
+                Defines the maximum number of words per practice session (range: 5 to 20).
+              </p>
+            </div>
           </div>
           
         </div>
@@ -313,7 +357,18 @@ const numbersInSpanish = [
 ]
 
 // Tab navigation
-const activeTab = ref('add') // 'add' or 'manage'
+const activeTab = ref('add') // 'add' or 'manage' or 'config'
+
+// Configuration states
+const wordDifficultyFilter = ref('easy')
+const sessionWordLimit = ref(10)
+
+const updateConfig = async () => {
+  await dictionaryStore.updateSettings({
+    wordDifficultyFilter: wordDifficultyFilter.value,
+    sessionWordLimit: sessionWordLimit.value
+  })
+}
 
 // Form states for adding words
 const wordsInput = ref('')
@@ -527,6 +582,9 @@ onMounted(async () => {
 
   // Ensure dictionary initialized
   await dictionaryStore.init()
+
+  wordDifficultyFilter.value = dictionaryStore.globalSettings?.wordDifficultyFilter || 'easy'
+  sessionWordLimit.value = dictionaryStore.globalSettings?.sessionWordLimit || 10
 })
 </script>
 
@@ -1167,5 +1225,55 @@ onMounted(async () => {
 
 .btn-delete:active {
   background: rgba(239, 68, 68, 0.3);
+}
+
+/* Configuration Tab */
+.config-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.config-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+}
+
+.config-helper {
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  line-height: 1.3;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.config-slider {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--color-accent-purple);
+}
+
+.slider-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-accent-purple);
+  min-width: 80px;
 }
 </style>

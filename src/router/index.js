@@ -59,6 +59,19 @@ const router = createRouter({
       component: ParentsView
     },
     {
+      path: '/session-summary',
+      name: 'session-summary',
+      component: () => import('@/views/SessionSummaryView.vue'),
+      beforeEnter: (to, from, next) => {
+        const store = useGameStore()
+        if (!store.currentCategory) {
+          next({ name: 'home' })
+        } else {
+          next()
+        }
+      }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }

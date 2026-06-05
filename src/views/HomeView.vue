@@ -23,7 +23,26 @@
           @click="selectCategory(cat.id_cat || cat.id)"
         >
           <span class="cat-icon">{{ cat.icon }}</span>
-          <span class="cat-name">{{ cat.name }}</span>
+          <div class="cat-info-wrapper">
+            <span class="cat-name">{{ cat.name }}</span>
+            <div class="cat-progress-bar-container" v-if="categoryProgress[cat.id_cat || cat.id]">
+              <template v-if="categoryProgress[cat.id_cat || cat.id].hasPlayed">
+                <div class="progress-track">
+                  <div 
+                    class="progress-fill" 
+                    :style="{ 
+                      width: `${categoryProgress[cat.id_cat || cat.id].percent}%`, 
+                      backgroundColor: cat.color 
+                    }"
+                  ></div>
+                </div>
+                <span class="progress-val">{{ categoryProgress[cat.id_cat || cat.id].percent }}%</span>
+              </template>
+              <template v-else>
+                <span class="not-played">Not played yet</span>
+              </template>
+            </div>
+          </div>
         </button>
       </div>
     </div>
@@ -38,6 +57,7 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
 import { useDictionaryStore } from '@/stores/dictionaryStore'
@@ -45,6 +65,15 @@ import { useDictionaryStore } from '@/stores/dictionaryStore'
 const router = useRouter()
 const gameStore = useGameStore()
 const dictionaryStore = useDictionaryStore()
+
+const categoryProgress = ref({})
+
+const loadCategoryProgress = async () => {
+  for (const cat of dictionaryStore.categories) {
+    const catId = cat.id_cat || cat.id
+    categoryProgress.value[catId] = await gameStore.getCategoryProgress(cat)
+  }
+}
 
 const selectCategory = (catId) => {
   gameStore.setCategory(catId)
@@ -54,6 +83,11 @@ const selectCategory = (catId) => {
 const openParentsZone = () => {
   router.push({ name: 'parents' })
 }
+
+onMounted(async () => {
+  await dictionaryStore.init()
+  await loadCategoryProgress()
+})
 </script>
 
 <style scoped>
@@ -210,5 +244,48 @@ const openParentsZone = () => {
   color: var(--color-text-light);
   border-color: var(--color-text-light);
   background: rgba(255, 255, 255, 0.05);
+}
+
+.cat-info-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cat-progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  width: 100%;
+}
+
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease-out;
+}
+
+.progress-val {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  min-width: 30px;
+  text-align: right;
+}
+
+.not-played {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  opacity: 0.6;
 }
 </style>

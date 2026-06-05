@@ -77,7 +77,11 @@ const celebrationText = computed(() => {
 
 const goNextWord = () => {
   gameStore.nextWord()
-  router.push({ name: 'game' })
+  if (gameStore.isSessionComplete) {
+    router.push({ name: 'session-summary' })
+  } else {
+    router.push({ name: 'game' })
+  }
 }
 
 const retryWord = () => {

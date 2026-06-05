@@ -6,8 +6,8 @@
         🏠
       </button>
       
-      <div class="word-progress-badge">
-        Word {{ gameStore.currentWordIndex + 1 }} of {{ gameStore.filteredWords.length }}
+      <div class="word-progress-badge" v-if="gameStore.sessionWords.length > 0">
+        Word {{ gameStore.sessionIndex + 1 }} of {{ gameStore.sessionWords.length }}
       </div>
 
       <ErrorCounter :count="gameStore.errorCount" />
@@ -276,7 +276,10 @@ watch(() => wordString.value, () => {
   setupGame()
 })
 
-onMounted(() => {
+onMounted(async () => {
+  if (gameStore.sessionWords.length === 0) {
+    await gameStore.prepareSession()
+  }
   setupGame()
 })
 </script>

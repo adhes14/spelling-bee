@@ -6,19 +6,21 @@
   >
     <div class="card-header">
       <span class="card-icon">{{ icon }}</span>
-      <div class="stars-row">
-        <span 
-          v-for="s in 3" 
-          :key="s" 
-          class="star-icon"
-          :class="{ active: s <= starsCount }"
-        >⭐</span>
-      </div>
     </div>
     
     <div class="card-body">
       <h3 class="card-title">{{ title }}</h3>
       <p class="card-description">{{ description }}</p>
+      
+      <div class="card-progress-wrapper">
+        <div class="progress-bar-container">
+          <div 
+            class="progress-bar-fill" 
+            :style="{ width: `${progressPercent}%`, '--bar-color': color }"
+          ></div>
+        </div>
+        <span class="progress-percentage">{{ progressPercent }}%</span>
+      </div>
     </div>
   </button>
 </template>
@@ -28,7 +30,7 @@ defineProps({
   level: { type: Number, required: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
-  starsCount: { type: Number, required: true },
+  progressPercent: { type: Number, required: true },
   color: { type: String, default: 'var(--color-accent-purple)' },
   icon: { type: String, default: '🎈' }
 })
@@ -71,24 +73,6 @@ defineEmits(['select'])
   line-height: 1;
 }
 
-.stars-row {
-  display: flex;
-  gap: 1px;
-  margin-top: 0.25rem;
-}
-
-.star-icon {
-  font-size: 0.8rem;
-  opacity: 0.2;
-  filter: grayscale(1);
-}
-
-.star-icon.active {
-  opacity: 1;
-  filter: none;
-  text-shadow: 0 0 4px var(--color-accent-star);
-}
-
 .card-body {
   flex: 1;
 }
@@ -105,5 +89,37 @@ defineEmits(['select'])
   color: var(--color-text-dim);
   font-weight: 500;
   line-height: 1.2;
+}
+
+.card-progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background-color: var(--bar-color, var(--color-accent-purple));
+  transition: width 0.4s ease-out;
+  box-shadow: 0 0 8px var(--bar-color);
+}
+
+.progress-percentage {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--color-text-light);
+  min-width: 38px;
+  text-align: right;
 }
 </style>

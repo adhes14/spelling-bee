@@ -7,6 +7,10 @@ export const useDictionaryStore = defineStore('dictionary', () => {
   const words = ref([])
   const categories = ref([])
   const isLoading = ref(false)
+  const globalSettings = ref({
+    wordDifficultyFilter: 'easy', // 'easy' | 'easy,medium' | 'easy,medium,hard'
+    sessionWordLimit: 10
+  })
 
   // Initialize DB and load all records
   async function init() {
@@ -15,10 +19,47 @@ export const useDictionaryStore = defineStore('dictionary', () => {
       // Ensure seed data is populated
       await seedDatabase()
       await loadAll()
+      await loadSettings()
     } catch (error) {
       console.error('Failed to initialize dictionary store:', error)
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function loadSettings() {
+    try {
+      const filter = await db.configuracion_global.get('word_difficulty_filter')
+      const limit = await db.configuracion_global.get('session_word_limit')
+      
+      if (filter) {
+        globalSettings.value.wordDifficultyFilter = filter.value
+      } else {
+        await db.configuracion_global.put({ key: 'word_difficulty_filter', value: 'easy' })
+      }
+      
+      if (limit) {
+        globalSettings.value.sessionWordLimit = Number(limit.value)
+      } else {
+        await db.configuracion_global.put({ key: 'session_word_limit', value: 10 })
+      }
+    } catch (error) {
+      console.error('Failed to load settings from DB:', error)
+    }
+  }
+
+  async function updateSettings({ wordDifficultyFilter, sessionWordLimit }) {
+    try {
+      if (wordDifficultyFilter !== undefined) {
+        globalSettings.value.wordDifficultyFilter = wordDifficultyFilter
+        await db.configuracion_global.put({ key: 'word_difficulty_filter', value: wordDifficultyFilter })
+      }
+      if (sessionWordLimit !== undefined) {
+        globalSettings.value.sessionWordLimit = Number(sessionWordLimit)
+        await db.configuracion_global.put({ key: 'session_word_limit', value: Number(sessionWordLimit) })
+      }
+    } catch (error) {
+      console.error('Failed to update settings in DB:', error)
     }
   }
 
@@ -110,11 +151,14 @@ export const useDictionaryStore = defineStore('dictionary', () => {
     words,
     categories,
     isLoading,
+    globalSettings,
     init,
     loadAll,
     addWord,
     deleteWord,
     updateWordDifficulty,
-    addCategory
+    addCategory,
+    loadSettings,
+    updateSettings
   }
 })

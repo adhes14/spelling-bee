@@ -20,7 +20,7 @@
           :level="1"
           title="Easy"
           description="Drag the letters to their matching boxes."
-          :stars-count="level1Stars"
+          :progress-percent="level1Progress.percent"
           color="var(--color-accent-cyan)"
           icon="🎈"
           @select="selectLevel(1)"
@@ -30,7 +30,7 @@
           :level="2"
           title="Medium"
           description="Find the correct letters among distractor letters."
-          :stars-count="level2Stars"
+          :progress-percent="level2Progress.percent"
           color="var(--color-accent-pink)"
           icon="🚀"
           @select="selectLevel(2)"
@@ -40,7 +40,7 @@
           :level="3"
           title="Advanced"
           description="Listen carefully and write using the keyboard."
-          :stars-count="level3Stars"
+          :progress-percent="level3Progress.percent"
           color="var(--color-accent-purple)"
           icon="🧠"
           @select="selectLevel(3)"
@@ -50,7 +50,7 @@
 
     <!-- Info banner -->
     <footer class="footer-tip">
-      💡 Try to earn 3 stars on each level
+      💡 Try to earn 100% on each level
     </footer>
   </div>
 </template>
@@ -64,25 +64,26 @@ import SubLevelCard from '@/components/ui/SubLevelCard.vue'
 const router = useRouter()
 const gameStore = useGameStore()
 
-const level1Stars = ref(0)
-const level2Stars = ref(0)
-const level3Stars = ref(0)
+const level1Progress = ref({ percent: 0, rated: 0, total: 0 })
+const level2Progress = ref({ percent: 0, rated: 0, total: 0 })
+const level3Progress = ref({ percent: 0, rated: 0, total: 0 })
 
 const goBack = () => {
   gameStore.reset()
   router.push({ name: 'home' })
 }
 
-const selectLevel = (level) => {
+const selectLevel = async (level) => {
   gameStore.setSublevel(level)
+  await gameStore.prepareSession()
   gameStore.startWord()
   router.push({ name: 'game' })
 }
 
 onMounted(async () => {
-  level1Stars.value = await gameStore.getSublevelProgress(1)
-  level2Stars.value = await gameStore.getSublevelProgress(2)
-  level3Stars.value = await gameStore.getSublevelProgress(3)
+  level1Progress.value = await gameStore.getSublevelProgress(1)
+  level2Progress.value = await gameStore.getSublevelProgress(2)
+  level3Progress.value = await gameStore.getSublevelProgress(3)
 })
 </script>
 
