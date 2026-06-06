@@ -14,6 +14,12 @@ db.version(2).stores({
   configuracion_global: 'key'
 })
 
+db.version(3).stores({
+  progreso_usuario: '++id, word, category, sublevel, score, lastPracticedAt, [word+category+sublevel]'
+}).upgrade(async tx => {
+  await tx.table('progreso_usuario').clear()
+})
+
 // Request persistent storage
 if (typeof window !== 'undefined' && navigator.storage && navigator.storage.persist) {
   navigator.storage.persist().then((persisted) => {

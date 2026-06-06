@@ -37,7 +37,14 @@ app.use(router)
 
 // Initialize IndexedDB Dictionary Store (Paso 2.1 & 2.2 in PRD)
 import { useDictionaryStore } from '@/stores/dictionaryStore'
+import { useGameStore } from '@/stores/gameStore'
+
 const dictionaryStore = useDictionaryStore(pinia)
-dictionaryStore.init()
+const gameStore = useGameStore(pinia)
+
+dictionaryStore.init().then(() => {
+  const decayPerDay = dictionaryStore.globalSettings?.scoreDecayPerDay || 5
+  gameStore.applyDecayOnStartup(decayPerDay)
+})
 
 app.mount('#app')

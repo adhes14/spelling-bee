@@ -49,7 +49,7 @@ export const useGameStore = defineStore('game', () => {
     currentSublevel.value = level
   }
 
-  // Prepare session words (N lowest-rated first, shuffle ties)
+  // Prepare session words (lowest-score first, shuffle ties)
   async function prepareSession() {
     if (!currentCategory.value) return
     const catId = currentCategory.value.id_cat || currentCategory.value.id
@@ -64,51 +64,53 @@ export const useGameStore = defineStore('game', () => {
       return
     }
 
+    // Shuffle helper
+    const shuffle = (arr) => {
+      const newArr = [...arr]
+      for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+      }
+      return newArr
+    }
+
     try {
       const records = await db.progreso_usuario
         .where({ category: catId, sublevel })
         .toArray()
 
-      const recordMap = new Map(records.map(r => [r.word, r.stars]))
+      const recordMap = new Map(records.map(r => [r.word, r.score || 0]))
 
-      const wordsWithRating = list.map(w => ({
+      const wordsWithScore = list.map(w => ({
         wordObj: w,
-        stars: recordMap.get(w.word) || 0
+        score: recordMap.get(w.word) || 0
       }))
 
-      // Group by rating (0, 1, 2, 3)
-      const groups = { 0: [], 1: [], 2: [], 3: [] }
-      wordsWithRating.forEach(item => {
-        const s = item.stars
-        if (groups[s] !== undefined) {
-          groups[s].push(item.wordObj)
-        } else {
-          groups[0].push(item.wordObj)
+      // Group words by score to shuffle ties
+      const scoreGroups = {}
+      wordsWithScore.forEach(item => {
+        const s = item.score
+        if (!scoreGroups[s]) {
+          scoreGroups[s] = []
         }
+        scoreGroups[s].push(item.wordObj)
       })
 
-      // Shuffle helper
-      const shuffle = (arr) => {
-        const newArr = [...arr]
-        for (let i = newArr.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [newArr[i], newArr[j]] = [newArr[j], newArr[i]]
-        }
-        return newArr
-      }
+      // Sort scores ascending (lowest score = highest priority)
+      const sortedScores = Object.keys(scoreGroups)
+        .map(Number)
+        .sort((a, b) => a - b)
 
-      const sortedWords = [
-        ...shuffle(groups[0]),
-        ...shuffle(groups[1]),
-        ...shuffle(groups[2]),
-        ...shuffle(groups[3])
-      ]
+      let sortedWords = []
+      sortedScores.forEach(s => {
+        sortedWords = sortedWords.concat(shuffle(scoreGroups[s]))
+      })
 
       sessionWords.value = sortedWords.slice(0, limit)
       sessionIndex.value = 0
     } catch (error) {
       console.error('Error preparing session words:', error)
-      sessionWords.value = list.slice(0, limit)
+      sessionWords.value = shuffle(list).slice(0, limit)
       sessionIndex.value = 0
     }
   }
@@ -126,26 +128,59 @@ export const useGameStore = defineStore('game', () => {
   }
 
   // Finish word spelling
-  function finishWord() {
+  async function finishWord() {
+    let starsObtained = 0
     if (errorCount.value === 0) {
-      stars.value = 3
-    } else if (errorCount.value <= 2) {
-      stars.value = 2
+      starsObtained = 3
+    } else if (errorCount.value === 1) {
+      starsObtained = 2
+    } else if (errorCount.value === 2) {
+      starsObtained = 1
     } else {
-      stars.value = 1
+      starsObtained = 0
     }
+    stars.value = starsObtained
 
     if (currentWordObj.value) {
       const catId = currentCategory.value.id_cat || currentCategory.value.id
-      saveProgress(currentWordObj.value.word, catId, currentSublevel.value, stars.value)
-      sessionScores.value[currentWordObj.value.word] = stars.value
+      const sublevel = currentSublevel.value
+      const word = currentWordObj.value.word
+
+      // Calculate score increment
+      let increment = 0
+      if (errorCount.value === 0) {
+        increment = 20
+      } else if (errorCount.value === 1) {
+        increment = 15
+      } else if (errorCount.value === 2) {
+        increment = 10
+      } else if (errorCount.value === 3) {
+        increment = 5
+      }
+
+      // Fetch current score from DB
+      let currentScore = 0
+      try {
+        const existing = await db.progreso_usuario
+          .where({ word, category: catId, sublevel })
+          .first()
+        if (existing) {
+          currentScore = existing.score || 0
+        }
+      } catch (err) {
+        console.error('Error fetching score for finishWord:', err)
+      }
+
+      const newScore = Math.min(100, currentScore + increment)
+      await saveProgress(word, catId, sublevel, newScore)
+      sessionScores.value[word] = starsObtained
     }
 
     gamePhase.value = 'result'
   }
 
   // Save progress to IndexedDB (overwrite with latest score)
-  async function saveProgress(word, category, sublevel, starsObtained) {
+  async function saveProgress(word, category, sublevel, newScore) {
     try {
       const existing = await db.progreso_usuario
         .where({ word, category, sublevel })
@@ -153,16 +188,16 @@ export const useGameStore = defineStore('game', () => {
 
       if (existing) {
         await db.progreso_usuario.update(existing.id, {
-          stars: starsObtained,
-          completedAt: new Date()
+          score: newScore,
+          lastPracticedAt: new Date()
         })
       } else {
         await db.progreso_usuario.add({
           word,
           category,
           sublevel,
-          stars: starsObtained,
-          completedAt: new Date()
+          score: newScore,
+          lastPracticedAt: new Date()
         })
       }
     } catch (error) {
@@ -170,7 +205,7 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  // Get sublevel progress (percentage of active/visible words with 3 stars)
+  // Get sublevel progress (percentage based on average score of active/visible words)
   async function getSublevelProgress(sublevel) {
     if (!currentCategory.value) return { percent: 0, rated: 0, total: 0 }
     const catId = currentCategory.value.id_cat || currentCategory.value.id
@@ -183,22 +218,20 @@ export const useGameStore = defineStore('game', () => {
         .where({ category: catId, sublevel })
         .toArray()
 
-      const recordMap = new Map(records.map(r => [r.word, r.stars]))
+      const recordMap = new Map(records.map(r => [r.word, r.score || 0]))
 
-      let threeStarsCount = 0
+      let totalScore = 0
       let ratedCount = 0
 
       for (const w of list) {
-        const starsVal = recordMap.get(w.word)
-        if (starsVal !== undefined) {
+        const scoreVal = recordMap.get(w.word)
+        if (scoreVal !== undefined) {
           ratedCount++
-          if (starsVal === 3) {
-            threeStarsCount++
-          }
+          totalScore += scoreVal
         }
       }
 
-      const percent = Math.round((threeStarsCount / list.length) * 100)
+      const percent = Math.round(totalScore / list.length)
       return { percent, rated: ratedCount, total: list.length }
     } catch (error) {
       console.error('Error fetching sublevel progress:', error)
@@ -206,7 +239,7 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  // Get category progress (percentage of 3-star entries over all 3 levels for all active words)
+  // Get category progress (percentage based on average score across all 3 levels for all active words)
   async function getCategoryProgress(cat) {
     const catId = cat.id_cat || cat.id
     const allowedDifficulties = (dictionaryStore.globalSettings?.wordDifficultyFilter || 'easy').split(',')
@@ -220,22 +253,54 @@ export const useGameStore = defineStore('game', () => {
         .toArray()
 
       const hasPlayed = records.length > 0
-      let threeStarsCount = 0
+      const recordMap = new Map(records.map(r => [`${r.word}||${r.sublevel}`, r.score || 0]))
 
-      const visibleWordSet = new Set(list.map(w => w.word))
+      let totalScore = 0
+      const totalPossibleEntries = list.length * 3
 
-      for (const r of records) {
-        if (visibleWordSet.has(r.word) && r.stars === 3) {
-          threeStarsCount++
+      for (const w of list) {
+        for (let sl = 1; sl <= 3; sl++) {
+          const scoreVal = recordMap.get(`${w.word}||${sl}`) || 0
+          totalScore += scoreVal
         }
       }
 
-      const totalPossible = list.length * 3
-      const percent = Math.round((threeStarsCount / totalPossible) * 100)
+      const percent = Math.round(totalScore / totalPossibleEntries)
       return { percent, hasPlayed }
     } catch (error) {
       console.error('Error fetching category progress:', error)
       return { percent: 0, hasPlayed: false }
+    }
+  }
+
+  // Apply linear score decay based on lastPracticedAt
+  async function applyDecayOnStartup(decayPerDay) {
+    try {
+      const records = await db.progreso_usuario.toArray()
+      const now = new Date()
+      
+      for (const record of records) {
+        if (!record.lastPracticedAt) continue
+        
+        const lastPracticed = new Date(record.lastPracticedAt)
+        const diffTime = Math.abs(now - lastPracticed)
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays > 0) {
+          const decayAmount = diffDays * decayPerDay
+          const newScore = Math.max(0, (record.score || 0) - decayAmount)
+          
+          if (newScore !== record.score) {
+            await db.progreso_usuario.update(record.id, {
+              score: newScore,
+              lastPracticedAt: now
+            })
+          }
+        }
+      }
+      console.log('Decay applied successfully on startup.')
+    } catch (error) {
+      console.error('Failed to apply score decay on startup:', error)
     }
   }
 
@@ -283,6 +348,7 @@ export const useGameStore = defineStore('game', () => {
     finishWord,
     nextWord,
     reset,
-    getSublevelProgress
+    getSublevelProgress,
+    applyDecayOnStartup
   }
 })

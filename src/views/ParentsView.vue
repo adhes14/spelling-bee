@@ -321,6 +321,25 @@
                 Defines the maximum number of words per practice session (range: 5 to 20).
               </p>
             </div>
+
+            <div class="config-group">
+              <label class="config-label">Score Decay Per Day:</label>
+              <div class="slider-container">
+                <input 
+                  type="range" 
+                  v-model="scoreDecayPerDay" 
+                  min="1" 
+                  max="20" 
+                  step="1"
+                  @change="updateConfig"
+                  class="config-slider"
+                />
+                <span class="slider-val">{{ scoreDecayPerDay }} points/day</span>
+              </div>
+              <p class="config-helper">
+                Defines the amount of score subtracted from practiced words per day (range: 1 to 20).
+              </p>
+            </div>
           </div>
           
         </div>
@@ -362,11 +381,13 @@ const activeTab = ref('add') // 'add' or 'manage' or 'config'
 // Configuration states
 const wordDifficultyFilter = ref('easy')
 const sessionWordLimit = ref(10)
+const scoreDecayPerDay = ref(5)
 
 const updateConfig = async () => {
   await dictionaryStore.updateSettings({
     wordDifficultyFilter: wordDifficultyFilter.value,
-    sessionWordLimit: sessionWordLimit.value
+    sessionWordLimit: sessionWordLimit.value,
+    scoreDecayPerDay: scoreDecayPerDay.value
   })
 }
 
@@ -585,6 +606,7 @@ onMounted(async () => {
 
   wordDifficultyFilter.value = dictionaryStore.globalSettings?.wordDifficultyFilter || 'easy'
   sessionWordLimit.value = dictionaryStore.globalSettings?.sessionWordLimit || 10
+  scoreDecayPerDay.value = dictionaryStore.globalSettings?.scoreDecayPerDay || 5
 })
 </script>
 

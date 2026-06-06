@@ -9,7 +9,8 @@ export const useDictionaryStore = defineStore('dictionary', () => {
   const isLoading = ref(false)
   const globalSettings = ref({
     wordDifficultyFilter: 'easy', // 'easy' | 'easy,medium' | 'easy,medium,hard'
-    sessionWordLimit: 10
+    sessionWordLimit: 10,
+    scoreDecayPerDay: 5
   })
 
   let initPromise = null
@@ -42,6 +43,7 @@ export const useDictionaryStore = defineStore('dictionary', () => {
     try {
       const filter = await db.configuracion_global.get('word_difficulty_filter')
       const limit = await db.configuracion_global.get('session_word_limit')
+      const decay = await db.configuracion_global.get('score_decay_per_day')
       
       if (filter) {
         globalSettings.value.wordDifficultyFilter = filter.value
@@ -54,12 +56,18 @@ export const useDictionaryStore = defineStore('dictionary', () => {
       } else {
         await db.configuracion_global.put({ key: 'session_word_limit', value: 10 })
       }
+
+      if (decay) {
+        globalSettings.value.scoreDecayPerDay = Number(decay.value)
+      } else {
+        await db.configuracion_global.put({ key: 'score_decay_per_day', value: 5 })
+      }
     } catch (error) {
       console.error('Failed to load settings from DB:', error)
     }
   }
 
-  async function updateSettings({ wordDifficultyFilter, sessionWordLimit }) {
+  async function updateSettings({ wordDifficultyFilter, sessionWordLimit, scoreDecayPerDay }) {
     try {
       if (wordDifficultyFilter !== undefined) {
         globalSettings.value.wordDifficultyFilter = wordDifficultyFilter
@@ -68,6 +76,10 @@ export const useDictionaryStore = defineStore('dictionary', () => {
       if (sessionWordLimit !== undefined) {
         globalSettings.value.sessionWordLimit = Number(sessionWordLimit)
         await db.configuracion_global.put({ key: 'session_word_limit', value: Number(sessionWordLimit) })
+      }
+      if (scoreDecayPerDay !== undefined) {
+        globalSettings.value.scoreDecayPerDay = Number(scoreDecayPerDay)
+        await db.configuracion_global.put({ key: 'score_decay_per_day', value: Number(scoreDecayPerDay) })
       }
     } catch (error) {
       console.error('Failed to update settings in DB:', error)
