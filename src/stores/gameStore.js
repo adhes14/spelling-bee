@@ -13,8 +13,10 @@ export const useGameStore = defineStore('game', () => {
   const errorCount = ref(0)
   const gamePhase = ref('idle') // 'idle' (menu), 'playing', 'result'
   const stars = ref(0)
+  const isRetryRound = ref(false)
 
   const sessionWords = ref([])
+  const fullSessionWords = ref([])
   const sessionScores = ref({})
 
   const isSessionComplete = computed(() => {
@@ -51,6 +53,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Prepare session words (lowest-score first, shuffle ties)
   async function prepareSession() {
+    isRetryRound.value = false
     if (!currentCategory.value) return
     const catId = currentCategory.value.id_cat || currentCategory.value.id
     const sublevel = currentSublevel.value
@@ -107,10 +110,12 @@ export const useGameStore = defineStore('game', () => {
       })
 
       sessionWords.value = sortedWords.slice(0, limit)
+      fullSessionWords.value = [...sessionWords.value]
       sessionIndex.value = 0
     } catch (error) {
       console.error('Error preparing session words:', error)
       sessionWords.value = shuffle(list).slice(0, limit)
+      fullSessionWords.value = [...sessionWords.value]
       sessionIndex.value = 0
     }
   }
@@ -146,34 +151,37 @@ export const useGameStore = defineStore('game', () => {
       const sublevel = currentSublevel.value
       const word = currentWordObj.value.word
 
-      // Calculate score increment
-      let increment = 0
-      if (errorCount.value === 0) {
-        increment = 20
-      } else if (errorCount.value === 1) {
-        increment = 15
-      } else if (errorCount.value === 2) {
-        increment = 10
-      } else if (errorCount.value === 3) {
-        increment = 5
-      }
-
-      // Fetch current score from DB
-      let currentScore = 0
-      try {
-        const existing = await db.progreso_usuario
-          .where({ word, category: catId, sublevel })
-          .first()
-        if (existing) {
-          currentScore = existing.score || 0
+      // Only update database progress if it is not a retry round
+      if (!isRetryRound.value) {
+        // Calculate score increment
+        let increment = 0
+        if (errorCount.value === 0) {
+          increment = 20
+        } else if (errorCount.value === 1) {
+          increment = 15
+        } else if (errorCount.value === 2) {
+          increment = 10
+        } else if (errorCount.value === 3) {
+          increment = 5
         }
-      } catch (err) {
-        console.error('Error fetching score for finishWord:', err)
-      }
 
-      const newScore = Math.min(100, currentScore + increment)
-      await saveProgress(word, catId, sublevel, newScore)
-      sessionScores.value[word] = starsObtained
+        // Fetch current score from DB
+        let currentScore = 0
+        try {
+          const existing = await db.progreso_usuario
+            .where({ word, category: catId, sublevel })
+            .first()
+          if (existing) {
+            currentScore = existing.score || 0
+          }
+        } catch (err) {
+          console.error('Error fetching score for finishWord:', err)
+        }
+
+        const newScore = Math.min(100, currentScore + increment)
+        await saveProgress(word, catId, sublevel, newScore)
+      }
+      sessionScores.value[word] = Math.max(sessionScores.value[word] || 0, starsObtained)
     }
 
     gamePhase.value = 'result'
@@ -315,15 +323,30 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  // Start retry round with a list of failed words
+  function startRetryRound(failedWordObjs) {
+    isRetryRound.value = true
+    sessionWords.value = [...failedWordObjs]
+    sessionIndex.value = 0
+  }
+
+  // End retry round
+  function endRetryRound() {
+    isRetryRound.value = false
+    sessionWords.value = [...fullSessionWords.value]
+  }
+
   // Reset
   function reset() {
     currentCategory.value = null
     currentSublevel.value = 1
     sessionIndex.value = 0
     sessionWords.value = []
+    fullSessionWords.value = []
     errorCount.value = 0
     gamePhase.value = 'idle'
     stars.value = 0
+    isRetryRound.value = false
   }
 
   return {
@@ -333,6 +356,7 @@ export const useGameStore = defineStore('game', () => {
     errorCount,
     gamePhase,
     stars,
+    isRetryRound,
     filteredWords,
     currentWordObj,
     sessionWords,
@@ -346,6 +370,8 @@ export const useGameStore = defineStore('game', () => {
     startWord,
     incrementError,
     finishWord,
+    startRetryRound,
+    endRetryRound,
     nextWord,
     reset,
     getSublevelProgress,

@@ -42,6 +42,9 @@ const wordString = gameStore.currentWordObj?.word || ''
 const goNextWord = () => {
   gameStore.nextWord()
   if (gameStore.isSessionComplete) {
+    if (gameStore.isRetryRound) {
+      gameStore.endRetryRound()
+    }
     router.push({ name: 'session-summary' })
   } else {
     router.push({ name: 'game' })

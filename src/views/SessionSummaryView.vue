@@ -2,9 +2,14 @@
   <div class="session-summary-view">
     <!-- Header -->
     <div class="summary-header">
-      <div class="trophy-badge pop-in">🏆</div>
-      <h1 class="summary-title pop-in">Session Completed!</h1>
-      <p class="summary-subtitle pop-in">Amazing effort! Here is how you did:</p>
+      <div v-if="isPerfectSession" class="trophy-badge pop-in perfect-star-anim">🌟</div>
+      <div v-else class="trophy-badge pop-in">🏆</div>
+      
+      <h1 v-if="isPerfectSession" class="summary-title perfect-title pop-in">Perfect Session!</h1>
+      <h1 v-else class="summary-title pop-in">Session Completed!</h1>
+      
+      <p v-if="isPerfectSession" class="summary-subtitle pop-in">Spectacular! You got 3 stars on every single word!</p>
+      <p v-else class="summary-subtitle pop-in">Amazing effort! Here is how you did:</p>
     </div>
 
     <!-- Stats Card -->
@@ -43,6 +48,14 @@
 
     <!-- Actions -->
     <div class="actions-panel pop-in">
+      <button 
+        v-if="failedWords.length > 0" 
+        class="btn-action retry btn-bouncy" 
+        @click="retryFailedWords"
+      >
+        🔁 Retry Missed Words
+      </button>
+
       <button class="btn-action next btn-bouncy" @click="playNewSession">
         🔄 Play Another Session
       </button>
@@ -74,6 +87,25 @@ const totalStars = computed(() => {
 })
 
 const maxStars = computed(() => totalCount.value * 3)
+
+const failedWords = computed(() => {
+  return gameStore.sessionWords.filter(wordObj => {
+    const score = gameStore.sessionScores[wordObj.word] || 0
+    return score < 3
+  })
+})
+
+const isPerfectSession = computed(() => {
+  return gameStore.sessionWords.length > 0 && failedWords.value.length === 0
+})
+
+const retryFailedWords = () => {
+  if (failedWords.value.length > 0) {
+    gameStore.startRetryRound(failedWords.value)
+    gameStore.startWord()
+    router.push({ name: 'game' })
+  }
+}
 
 const playNewSession = async () => {
   await gameStore.prepareSession()
@@ -255,6 +287,12 @@ onMounted(() => {
   color: white;
 }
 
+.btn-action.retry {
+  background: linear-gradient(135deg, var(--color-accent-cyan) 0%, #0891b2 100%);
+  font-weight: 800;
+  color: white;
+}
+
 .btn-action.home {
   background: linear-gradient(135deg, #1e1b4b 0%, #0f0c2d 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -262,5 +300,30 @@ onMounted(() => {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--color-text-light);
+}
+
+.perfect-star-anim {
+  animation: spinGlow 4s linear infinite, hoverTrophy 3s ease-in-out infinite;
+}
+
+@keyframes spinGlow {
+  0% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6)) hue-rotate(0deg); }
+  50% { filter: drop-shadow(0 0 30px rgba(255, 223, 0, 0.9)) hue-rotate(180deg); }
+  100% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6)) hue-rotate(360deg); }
+}
+
+.perfect-title {
+  background: linear-gradient(135deg, #ffe066 0%, #f59e0b 50%, #fef08a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shineText 3s ease infinite;
+  text-shadow: none; /* remove standard shadow to allow gradient text */
+}
+
+@keyframes shineText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 </style>
