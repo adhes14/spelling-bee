@@ -3,7 +3,6 @@
     <div class="filter-bar">
       <label class="filter-label">Filter by Category:</label>
       <select v-model="filterCategory" class="select-input select-filter">
-        <option value="ALL">All Categories</option>
         <option 
           v-for="cat in categories" 
           :key="cat.id_cat || cat.id" 
@@ -14,14 +13,22 @@
       </select>
     </div>
 
+    <!-- Retry All button (only visible when any word has failed audio) -->
+    <div v-if="hasFailedAudio" class="retry-bar">
+      <button class="btn-retry-all" @click="retryAllFailed" :disabled="isRetryingAll">
+        {{ isRetryingAll ? '⟳ Retrying...' : '⚠️ Retry All Failed Downloads' }}
+      </button>
+      <span class="retry-hint">Downloads run in background. Status updates automatically.</span>
+    </div>
+
     <!-- Custom Words list -->
     <div class="words-list-container">
-      <div v-if="filteredCustomWords.length === 0" class="no-words">
-        No custom words found. Go to "Add Words" to expand the vocabulary!
+      <div v-if="filteredWords.length === 0" class="no-words">
+        No words in this category
       </div>
       <div v-else class="words-list">
         <div 
-          v-for="item in filteredCustomWords" 
+          v-for="item in filteredWords" 
           :key="item.id" 
           class="word-item glass-panel"
         >
@@ -30,6 +37,13 @@
             <span class="word-cat-badge">
               {{ getCategoryName(item.category) }}
             </span>
+          </div>
+
+          <!-- Audio Status Icon -->
+          <div class="audio-status-col" :title="audioTooltip(item)">
+            <span v-if="audioStatuses[audioKey(item)] === 'ready'" class="audio-icon ready-audio">🎵</span>
+            <span v-else-if="audioStatuses[audioKey(item)] === 'failed'" class="audio-icon failed-audio" @click="retrySingle(item)">⚠️</span>
+            <span v-else class="audio-icon missing-audio">🔊</span>
           </div>
           
           <div class="word-actions-row">
@@ -44,7 +58,7 @@
               <option value="hard">Hard</option>
             </select>
 
-            <button class="btn-delete" @click="deleteCustomWord(item.id, item.word)">
+            <button v-if="item.isCustom === true || item.isCustom === 1" class="btn-delete" @click="deleteCustomWord(item.id, item.word)">
               🗑️
             </button>
           </div>
@@ -55,7 +69,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useWordAudio } from '@/composables/useWordAudio'
+import { useDownloadQueue } from '@/composables/useDownloadQueue'
 
 const props = defineProps({
   categories: {
@@ -70,15 +86,81 @@ const props = defineProps({
 
 const emit = defineEmits(['word-deleted', 'difficulty-changed'])
 
-const filterCategory = ref('ALL')
+const { getAudioStatus } = useWordAudio()
+const downloadQueue = useDownloadQueue()
 
-const filteredCustomWords = computed(() => {
-  const allCustom = props.words.filter(w => w.isCustom === true || w.isCustom === 1)
-  if (filterCategory.value === 'ALL') {
-    return allCustom
-  }
-  return allCustom.filter(w => w.category === filterCategory.value)
+const filterCategory = ref(props.categories[0]?.id_cat || props.categories[0]?.id || '')
+const audioStatuses = ref({})       // "word||category" → 'ready'|'failed'|'missing'|'pending'
+const isRetryingAll = ref(false)
+
+const filteredWords = computed(() => {
+  return props.words.filter(w => w.category === filterCategory.value)
 })
+
+// Composite key for a word item
+const audioKey = (item) => `${item.word}||${item.category}`
+
+// Whether any visible word has failed audio status
+const hasFailedAudio = computed(() => {
+  return Object.values(audioStatuses.value).some(s => s === 'failed')
+})
+
+// Tooltip text for audio status icon
+const audioTooltip = (item) => {
+  const status = audioStatuses.value[audioKey(item)]
+  switch (status) {
+    case 'ready': return 'Google TTS audio cached — tap to hear'
+    case 'failed': return 'Download failed — tap to retry'
+    case 'pending': return 'Download in progress…'
+    default: return 'No cached audio — using device speech'
+  }
+}
+
+// Refresh audio statuses for all currently visible words
+async function refreshAudioStatuses() {
+  const words = filteredWords.value
+  if (words.length === 0) {
+    audioStatuses.value = {}
+    return
+  }
+
+  const fresh = {}
+  const promises = words.map(async (item) => {
+    const key = audioKey(item)
+    try {
+      fresh[key] = await getAudioStatus(item.word, item.category)
+    } catch (_) {
+      fresh[key] = 'missing'
+    }
+  })
+  await Promise.all(promises)
+  audioStatuses.value = fresh
+}
+
+// Retry a single failed audio download
+async function retrySingle(item) {
+  const key = audioKey(item)
+  // Immediately reflect pending state
+  audioStatuses.value = { ...audioStatuses.value, [key]: 'pending' }
+  downloadQueue.enqueueDownload(item.word, item.category)
+}
+
+// Retry all failed downloads
+async function retryAllFailed() {
+  isRetryingAll.value = true
+  try {
+    // Immediately mark all failed entries as pending
+    const fresh = { ...audioStatuses.value }
+    for (const key of Object.keys(fresh)) {
+      if (fresh[key] === 'failed') fresh[key] = 'pending'
+    }
+    audioStatuses.value = fresh
+
+    await downloadQueue.retryFailed()
+  } finally {
+    isRetryingAll.value = false
+  }
+}
 
 const getCategoryName = (catId) => {
   const cat = props.categories.find(c => c.id_cat === catId || c.id === catId)
@@ -94,6 +176,26 @@ const deleteCustomWord = (wordId, wordText) => {
     emit('word-deleted', wordId)
   }
 }
+
+// ── Reactive watchers ──────────────────────────────────────────────────
+
+// Refresh statuses whenever the filtered word list changes
+watch(filteredWords, () => {
+  refreshAudioStatuses()
+}, { immediate: false })
+
+// Refresh when download queue finishes processing
+watch(() => downloadQueue.isProcessing.value, (now, was) => {
+  if (was && !now) {
+    // Queue just finished — refresh to show final states
+    refreshAudioStatuses()
+  }
+})
+
+// Mount: initial status fetch
+onMounted(() => {
+  refreshAudioStatuses()
+})
 </script>
 
 <style scoped>
@@ -147,12 +249,89 @@ const deleteCustomWord = (wordId, wordText) => {
   gap: 0.75rem;
 }
 
+/* ── Retry Bar ─────────────────────────────────────────────── */
+.retry-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.btn-retry-all {
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  color: #facc15;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-retry-all:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-retry-all:not(:disabled):active {
+  background: rgba(234, 179, 8, 0.3);
+}
+
+.retry-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+
+/* ── Audio Status Column ──────────────────────────────────── */
+.audio-status-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  flex-shrink: 0;
+}
+
+.audio-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.audio-icon.ready-audio {
+  cursor: default;
+}
+
+.audio-icon.failed-audio {
+  cursor: pointer;
+  color: #f87171;
+}
+
+.audio-icon.failed-audio:hover {
+  transform: scale(1.2);
+}
+
+.audio-icon.failed-audio:active {
+  transform: scale(0.95);
+}
+
+.audio-icon.missing-audio {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .word-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
   border-color: rgba(255, 255, 255, 0.08);
+  gap: 0.5rem;
 }
 
 .word-info {
@@ -220,6 +399,20 @@ const deleteCustomWord = (wordId, wordText) => {
   .word-item {
     padding: 0.5rem 0.75rem;
     border-radius: 16px;
+    gap: 0.35rem;
+  }
+
+  .audio-icon {
+    font-size: 1rem;
+  }
+
+  .btn-retry-all {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .retry-hint {
+    font-size: 0.7rem;
   }
 
   .word-item .word-text {

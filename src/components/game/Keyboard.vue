@@ -21,11 +21,11 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useSpeech } from '@/composables/useSpeech'
+import { useLetterAudio } from '@/composables/useLetterAudio'
 
 const emit = defineEmits(['key-press'])
 
-const { speakLetter } = useSpeech()
+const { playLetter } = useLetterAudio()
 const activeKey = ref(null)
 
 const layout = [
@@ -77,7 +77,7 @@ const handleKeyPress = (key) => {
 
   // Voice feedback
   if (key.type === 'letter') {
-    speakLetter(key.value)
+    playLetter(key.value)
   }
 
   // Emit event

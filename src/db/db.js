@@ -20,6 +20,15 @@ db.version(3).stores({
   await tx.table('progreso_usuario').clear()
 })
 
+db.version(4).stores({
+  audios_blob: '++id, word, category, status, [word+category]'
+}).upgrade(async tx => {
+  // Existing v1-v3 records have only {id, word}. The audios_blob table was
+  // defined but never used in prior versions. Clear it to avoid schema
+  // mismatch with the new required fields (voiceName, format, blob, etc.).
+  await tx.table('audios_blob').clear()
+})
+
 // Request persistent storage
 if (typeof window !== 'undefined' && navigator.storage && navigator.storage.persist) {
   navigator.storage.persist().then((persisted) => {

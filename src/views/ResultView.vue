@@ -28,16 +28,20 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
-import { useSpeech } from '@/composables/useSpeech'
+import { useWordAudio } from '@/composables/useWordAudio'
 
 const router = useRouter()
 const gameStore = useGameStore()
-const { speakWord } = useSpeech()
+const { speakWord } = useWordAudio()
 
 const wordString = gameStore.currentWordObj?.word || ''
+const categoryId = computed(() => {
+  const cat = gameStore.currentCategory
+  return cat ? (cat.id_cat || cat.id || '') : ''
+})
 
 const goNextWord = () => {
   gameStore.nextWord()
@@ -59,7 +63,7 @@ onMounted(() => {
   // Congratulate children by reading the word aloud once more
   if (wordString) {
     setTimeout(() => {
-      speakWord(wordString)
+      speakWord(wordString, categoryId.value)
     }, 500)
   }
 })

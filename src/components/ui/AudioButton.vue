@@ -11,16 +11,17 @@
 </template>
 
 <script setup>
-import { useSpeech } from '@/composables/useSpeech'
+import { useWordAudio } from '@/composables/useWordAudio'
 
 const props = defineProps({
-  word: { type: String, required: true }
+  word: { type: String, required: true },
+  category: { type: String, required: true }
 })
 
-const { speakWord, speaking } = useSpeech()
+const { speakWord, speaking } = useWordAudio()
 
 const speak = () => {
-  speakWord(props.word)
+  speakWord(props.word, props.category)
 }
 </script>
 

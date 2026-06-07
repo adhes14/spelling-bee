@@ -22,7 +22,7 @@
 
       <!-- Play Word Audio Button -->
       <div class="audio-trigger-wrapper">
-        <AudioButton :word="wordString" />
+        <AudioButton :word="wordString" :category="currentCategoryId" />
         <p class="audio-hint">Tap to listen</p>
       </div>
 
@@ -67,7 +67,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
-import { useSpeech } from '@/composables/useSpeech'
+import { useWordAudio } from '@/composables/useWordAudio'
+import { useLetterAudio } from '@/composables/useLetterAudio'
 import { useAudioFeedback } from '@/composables/useAudioFeedback'
 
 import ErrorCounter from '@/components/game/ErrorCounter.vue'
@@ -79,7 +80,8 @@ import AudioButton from '@/components/ui/AudioButton.vue'
 
 const router = useRouter()
 const gameStore = useGameStore()
-const { speakWord, speakLetter } = useSpeech()
+const { speakWord } = useWordAudio()
+const { playLetter } = useLetterAudio()
 const { playSuccessSound, playErrorSound, playClickSound } = useAudioFeedback()
 
 const wordString = computed(() => gameStore.currentWordObj?.word || '')
@@ -88,6 +90,8 @@ const levelName = computed(() => {
   if (gameStore.currentSublevel === 2) return 'Medium'
   return 'Advanced'
 })
+
+const currentCategoryId = computed(() => gameStore.currentCategory?.id_cat || gameStore.currentCategory?.id || '')
 
 // Sublevel 1 & 2 states
 const solvedSlots = ref({})
@@ -162,7 +166,7 @@ const setupGame = () => {
 
   // Proactively say the word shortly after view setup
   setTimeout(() => {
-    speakWord(word)
+    speakWord(word, currentCategoryId.value)
   }, 600)
 }
 
@@ -184,7 +188,7 @@ const handleLetterDrop = ({ index, letter }) => {
     // Correct!
     solvedSlots.value[index] = true
     playClickSound()
-    speakLetter(letter)
+    playLetter(letter)
 
     // Remove letter from pool
     poolLetters.value = poolLetters.value.filter(item => {
