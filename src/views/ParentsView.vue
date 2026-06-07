@@ -297,7 +297,6 @@
             <div class="filter-bar">
               <label class="filter-label">Filter by Category:</label>
               <select v-model="reportCategory" class="select-input select-filter">
-                <option value="ALL">All Categories</option>
                 <option 
                   v-for="cat in dictionaryStore.categories" 
                   :key="cat.id_cat || cat.id" 
@@ -321,7 +320,6 @@
                     <th @click="toggleReportSort('word')" class="sortable-header">
                       Word <span v-if="reportSortKey === 'word'">{{ reportSortDir === 'asc' ? '▲' : '▼' }}</span>
                     </th>
-                    <th>Category</th>
                     <th @click="toggleReportSort('scoreLvl1')" class="sortable-header">
                       Lvl 1 (Easy) <span v-if="reportSortKey === 'scoreLvl1'">{{ reportSortDir === 'asc' ? '▲' : '▼' }}</span>
                     </th>
@@ -336,7 +334,6 @@
                 <tbody>
                   <tr v-for="row in filteredSortedReport" :key="row.id">
                     <td class="word-col">{{ row.word }}</td>
-                    <td class="category-col">{{ getCategoryName(row.category) }}</td>
                     <td class="score-col">
                       <span v-if="row.scoreLvl1 === undefined" class="no-score">—</span>
                       <span v-else :class="['score-badge', getScoreClass(row.scoreLvl1)]">{{ row.scoreLvl1 }}</span>
@@ -662,7 +659,7 @@ const deleteCustomWord = async (wordId, wordText) => {
 // Progress report states
 const progressScores = ref([])
 const isLoadingProgress = ref(false)
-const reportCategory = ref('ALL')
+const reportCategory = ref('')
 const reportSortKey = ref('word')
 const reportSortDir = ref('asc')
 
@@ -706,7 +703,7 @@ const toggleReportSort = (key) => {
 const filteredSortedReport = computed(() => {
   let list = progressScores.value
 
-  if (reportCategory.value !== 'ALL') {
+  if (reportCategory.value && reportCategory.value !== 'ALL') {
     list = list.filter(row => row.category === reportCategory.value)
   }
 
@@ -755,6 +752,11 @@ onMounted(async () => {
   // Ensure dictionary initialized
   await dictionaryStore.init()
   await loadProgressReport()
+
+  if (dictionaryStore.categories.length > 0) {
+    const firstCat = dictionaryStore.categories[0]
+    reportCategory.value = firstCat.id_cat || firstCat.id
+  }
 
   wordDifficultyFilter.value = dictionaryStore.globalSettings?.wordDifficultyFilter || 'easy'
   sessionWordLimit.value = dictionaryStore.globalSettings?.sessionWordLimit || 10
@@ -1510,11 +1512,6 @@ onMounted(async () => {
   text-transform: capitalize;
 }
 
-.category-col {
-  color: var(--color-text-dim);
-  font-size: 0.9rem;
-}
-
 .score-col {
   text-align: center;
 }
@@ -1558,5 +1555,163 @@ onMounted(async () => {
   padding: 3rem 1rem;
   color: var(--color-text-dim);
   font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .parents-view {
+    padding: calc(0.75rem + var(--safe-area-top)) 0.75rem calc(1rem + var(--safe-area-bottom));
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .btn-back {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+
+  .view-title {
+    font-size: 1.3rem;
+  }
+
+  .dashboard-panel {
+    padding: 0.75rem;
+    border-radius: 18px;
+  }
+
+  .tabs-nav {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+  
+  .tab-btn {
+    flex: 1 1 calc(50% - 0.15rem);
+    font-size: 0.85rem;
+    padding: 0.45rem 0.2rem;
+    border-radius: 8px;
+  }
+
+  .filter-bar {
+    margin-bottom: 0.75rem;
+    gap: 0.15rem;
+  }
+
+  .filter-label {
+    font-size: 0.85rem;
+  }
+
+  .select-input {
+    padding: 0.45rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  /* Progress report table on mobile */
+  .report-table th, 
+  .report-table td {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .report-table th {
+    font-size: 0.75rem;
+  }
+
+  .word-col {
+    font-size: 0.9rem;
+  }
+
+  .score-badge {
+    min-width: 30px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  /* Manage custom words list on mobile */
+  .word-item {
+    padding: 0.5rem 0.75rem;
+    border-radius: 16px;
+  }
+
+  .word-item .word-text {
+    font-size: 1.1rem;
+  }
+
+  .word-cat-badge {
+    font-size: 0.75rem;
+  }
+
+  .select-mini {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-delete {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  /* Configuration and wizard adjustments on mobile */
+  .config-tab-content {
+    gap: 1rem;
+  }
+
+  .config-label {
+    font-size: 0.95rem;
+  }
+
+  .config-helper {
+    font-size: 0.8rem;
+  }
+
+  .slider-val {
+    font-size: 0.95rem;
+    min-width: 65px;
+  }
+
+  .word-card {
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .word-title {
+    font-size: 1.4rem;
+  }
+
+  .classifier-info {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .override-controls {
+    gap: 0.5rem;
+  }
+
+  .wizard-actions {
+    gap: 0.5rem;
+  }
+
+  .btn-skip, .btn-confirm {
+    padding: 0.6rem;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+
+  .words-textarea {
+    min-height: 90px;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+
+  .btn-analyze {
+    padding: 0.75rem;
+    font-size: 1.05rem;
+    border-radius: 14px;
+  }
 }
 </style>
