@@ -38,9 +38,13 @@ app.use(router)
 // Initialize IndexedDB Dictionary Store (Paso 2.1 & 2.2 in PRD)
 import { useDictionaryStore } from '@/stores/dictionaryStore'
 import { useGameStore } from '@/stores/gameStore'
+import { usePwaStore } from '@/stores/pwaStore'
 
 const dictionaryStore = useDictionaryStore(pinia)
 const gameStore = useGameStore(pinia)
+const pwaStore = usePwaStore(pinia)
+
+pwaStore.initInstallListeners()
 
 dictionaryStore.init().then(() => {
   const decayPerDay = dictionaryStore.globalSettings?.scoreDecayPerDay || 5

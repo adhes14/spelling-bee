@@ -11,6 +11,20 @@
       <p class="subtitle">Learn and Play!</p>
     </div>
 
+    <!-- PWA Install Banner -->
+    <div v-if="isInstallable && !isPWA" class="install-banner glass-panel pop-in">
+      <div class="install-info">
+        <span class="install-icon">🐝</span>
+        <div class="install-text">
+          <h3>Install Spelling Bee!</h3>
+          <p>Play offline & full screen</p>
+        </div>
+      </div>
+      <button class="btn-install btn-bouncy" @click="handleInstallClick">
+        📥 Install
+      </button>
+    </div>
+
     <!-- Category selector list -->
     <div class="categories-panel glass-panel">
       <h2 class="panel-title">Choose a Category</h2>
@@ -53,6 +67,38 @@
         <span class="icon">⚙️</span> Parents Zone
       </button>
     </div>
+
+    <!-- iOS PWA Instructions Modal -->
+    <div v-if="showIosModal" class="ios-modal-overlay" @click.self="showIosModal = false">
+      <div class="ios-modal glass-panel pop-in">
+        <button class="btn-close-modal" @click="showIosModal = false">×</button>
+        <div class="ios-modal-header">
+          <span class="modal-icon">📲</span>
+          <h3>Install on iPhone / iPad</h3>
+        </div>
+        <div class="ios-modal-body">
+          <p>To add <strong>Spelling Bee Kids</strong> to your home screen:</p>
+          <ol class="ios-steps">
+            <li>
+              Tap the <strong>Share</strong> button
+              <span class="step-badge">📤</span>
+              at the bottom of Safari.
+            </li>
+            <li>
+              Scroll down and tap
+              <strong>Add to Home Screen</strong>
+              <span class="step-badge">➕</span>.
+            </li>
+            <li>
+              Tap <strong>Add</strong> in the top right corner.
+            </li>
+          </ol>
+        </div>
+        <button class="btn-modal-close-action btn-bouncy" @click="showIosModal = false">
+          Got it!
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -61,12 +107,22 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
 import { useDictionaryStore } from '@/stores/dictionaryStore'
+import { usePwaInstall } from '@/composables/usePwaInstall'
 
 const router = useRouter()
 const gameStore = useGameStore()
 const dictionaryStore = useDictionaryStore()
+const { isInstallable, isPWA, installApp } = usePwaInstall()
 
 const categoryProgress = ref({})
+const showIosModal = ref(false)
+
+const handleInstallClick = async () => {
+  const result = await installApp()
+  if (result && result.ios) {
+    showIosModal.value = true
+  }
+}
 
 const loadCategoryProgress = async () => {
   for (const cat of dictionaryStore.categories) {
@@ -287,5 +343,171 @@ onMounted(async () => {
   font-weight: 600;
   color: var(--color-text-dim);
   opacity: 0.6;
+}
+
+/* Install Banner */
+.install-banner {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+  border-color: rgba(6, 182, 212, 0.4); /* Cyan highlight */
+  box-shadow: 0 8px 32px 0 rgba(6, 182, 212, 0.2);
+}
+
+.install-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.install-icon {
+  font-size: 2rem;
+  line-height: 1;
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.install-text h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+  line-height: 1.2;
+}
+
+.install-text p {
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  line-height: 1.2;
+}
+
+.btn-install {
+  background: linear-gradient(135deg, var(--color-accent-cyan) 0%, #0891b2 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  white-space: nowrap;
+}
+
+.btn-install:hover, .btn-install:active {
+  transform: scale(1.05);
+}
+
+/* iOS Modal */
+.ios-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 7, 33, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 1.5rem;
+}
+
+.ios-modal {
+  width: 100%;
+  max-width: 380px;
+  padding: 2rem 1.5rem;
+  position: relative;
+  border-color: rgba(168, 85, 247, 0.4); /* Purple highlight */
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 1.75rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btn-close-modal:hover {
+  color: var(--color-text-light);
+}
+
+.ios-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.modal-icon {
+  font-size: 3rem;
+}
+
+.ios-modal-header h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text-light);
+}
+
+.ios-modal-body {
+  margin-bottom: 1.5rem;
+}
+
+.ios-modal-body p {
+  font-size: 0.95rem;
+  color: var(--color-text-light);
+  margin-bottom: 1rem;
+}
+
+.ios-steps {
+  text-align: left;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ios-steps li {
+  font-size: 0.9rem;
+  color: var(--color-text-dim);
+  line-height: 1.4;
+}
+
+.step-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.btn-modal-close-action {
+  width: 100%;
+  background: linear-gradient(135deg, var(--color-accent-purple) 0%, #7e22ce 100%);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
 }
 </style>
