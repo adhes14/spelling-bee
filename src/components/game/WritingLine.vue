@@ -6,10 +6,22 @@
       
       <!-- Middle content area -->
       <div class="text-content">
-        <span v-if="value" class="typed-text">
-          {{ value }}<span class="blinking-cursor">|</span>
+        <span v-if="value" class="typed-text-wrapper">
+          <!-- Target to place cursor before the first letter -->
+          <span class="cursor-touch-target start-target" @click.stop="emitCursorTap(0)"></span>
+          
+          <template v-for="(char, index) in value" :key="index">
+            <!-- Cursor before this character -->
+            <span v-if="cursorIndex === index" class="blinking-cursor">|</span>
+            <span class="char-span" @click.stop="emitCursorTap(index + 1)">
+              {{ char === ' ' ? '\u00A0' : char }}
+            </span>
+          </template>
+          
+          <!-- Cursor at the very end -->
+          <span v-if="cursorIndex === value.length" class="blinking-cursor">|</span>
         </span>
-        <span v-else class="placeholder-text">
+        <span v-else class="placeholder-text" @click.stop="emitCursorTap(0)">
           {{ placeholder }}<span class="blinking-cursor">|</span>
         </span>
       </div>
@@ -23,8 +35,15 @@
 <script setup>
 defineProps({
   value: { type: String, default: '' },
-  placeholder: { type: String, default: 'Spell the word...' }
+  placeholder: { type: String, default: 'Spell the word...' },
+  cursorIndex: { type: Number, default: 0 }
 })
+
+const emit = defineEmits(['cursor-tap'])
+
+const emitCursorTap = (index) => {
+  emit('cursor-tap', index)
+}
 </script>
 
 <style scoped>
@@ -66,14 +85,36 @@ defineProps({
   font-family: var(--font-main);
   font-size: 2.75rem;
   font-weight: 700;
-  letter-spacing: 2px;
   line-height: 1;
   text-transform: uppercase;
 }
 
-.typed-text {
+.typed-text-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-accent-cyan);
   text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+  position: relative;
+}
+
+.cursor-touch-target.start-target {
+  display: inline-block;
+  width: 16px;
+  height: 3.5rem;
+  margin-right: -8px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.char-span {
+  display: inline-block;
+  cursor: pointer;
+  padding: 0 1px;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+  letter-spacing: 2px;
 }
 
 .placeholder-text {
@@ -83,13 +124,19 @@ defineProps({
   letter-spacing: 0px;
   bottom: 8px;
   position: relative;
+  cursor: pointer;
 }
 
 .blinking-cursor {
   color: var(--color-accent-star);
   font-weight: 400;
   animation: blink 0.8s step-end infinite;
-  margin-left: 2px;
+  display: inline-block;
+  width: 0;
+  position: relative;
+  left: -1px;
+  overflow: visible;
+  line-height: 1;
 }
 
 @keyframes blink {

@@ -35,6 +35,9 @@
             <th @click="toggleReportSort('scoreLvl3')" class="sortable-header">
               Lvl 3 (Hard) <span v-if="reportSortKey === 'scoreLvl3'">{{ reportSortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
+            <th @click="toggleReportSort('scoreLvl4')" class="sortable-header">
+              Lvl 4 (Dictation) <span v-if="reportSortKey === 'scoreLvl4'">{{ reportSortDir === 'asc' ? '▲' : '▼' }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -51,6 +54,10 @@
             <td class="score-col">
               <span v-if="row.scoreLvl3 === undefined" class="no-score">—</span>
               <span v-else :class="['score-badge', getScoreClass(row.scoreLvl3)]">{{ row.scoreLvl3 }}</span>
+            </td>
+            <td class="score-col">
+              <span v-if="row.scoreLvl4 === undefined" class="no-score">—</span>
+              <span v-else :class="['score-badge', getScoreClass(row.scoreLvl4)]">{{ row.scoreLvl4 }}</span>
             </td>
           </tr>
         </tbody>
@@ -102,7 +109,8 @@ const loadProgressReport = async () => {
         difficulty: w.difficulty,
         scoreLvl1: recordMap.get(`${wLower}||1`),
         scoreLvl2: recordMap.get(`${wLower}||2`),
-        scoreLvl3: recordMap.get(`${wLower}||3`)
+        scoreLvl3: recordMap.get(`${wLower}||3`),
+        scoreLvl4: recordMap.get(`${wLower}||4`)
       }
     })
   } catch (error) {

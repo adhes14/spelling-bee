@@ -44,8 +44,8 @@ defineEmits(['select'])
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 1.25rem;
-  border-radius: 20px;
+  padding: clamp(0.6rem, 1.8vh, 1rem);
+  border-radius: 16px;
   text-align: left;
   cursor: pointer;
   color: var(--color-text-light);
@@ -54,9 +54,9 @@ defineEmits(['select'])
 }
 
 .sublevel-card:hover, .sublevel-card:active {
-  transform: scale(1.03);
+  transform: scale(1.02);
   border-color: var(--card-accent);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px var(--card-accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 12px var(--card-accent);
 }
 
 .card-header {
@@ -64,28 +64,29 @@ defineEmits(['select'])
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-right: 1.25rem;
-  min-width: 60px;
+  margin-right: clamp(0.6rem, 1.5vw, 1rem);
+  min-width: clamp(40px, 10vw, 52px);
 }
 
 .card-icon {
-  font-size: 2.5rem;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
   line-height: 1;
 }
 
 .card-body {
   flex: 1;
+  min-width: 0;
 }
 
 .card-title {
-  font-size: 1.35rem;
+  font-size: clamp(1.05rem, 3.5vw, 1.25rem);
   font-weight: 800;
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.1rem;
   color: var(--card-accent);
 }
 
 .card-description {
-  font-size: 0.95rem;
+  font-size: clamp(0.78rem, 2.2vw, 0.9rem);
   color: var(--color-text-dim);
   font-weight: 500;
   line-height: 1.2;
@@ -94,32 +95,32 @@ defineEmits(['select'])
 .card-progress-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
+  gap: 0.5rem;
+  margin-top: clamp(0.35rem, 1vh, 0.6rem);
   width: 100%;
 }
 
 .progress-bar-container {
   flex: 1;
-  height: 8px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 3px;
   background-color: var(--bar-color, var(--color-accent-purple));
   transition: width 0.4s ease-out;
-  box-shadow: 0 0 8px var(--bar-color);
+  box-shadow: 0 0 6px var(--bar-color);
 }
 
 .progress-percentage {
-  font-size: 0.9rem;
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
   font-weight: 800;
   color: var(--color-text-light);
-  min-width: 38px;
+  min-width: 32px;
   text-align: right;
 }
 </style>

@@ -103,12 +103,13 @@ onMounted(async () => {
 .sublevel-select-view {
   width: 100%;
   height: 100%;
-  padding: calc(1rem + var(--safe-area-top)) 1.5rem calc(1.5rem + var(--safe-area-bottom));
+  padding: calc(0.75rem + var(--safe-area-top)) 1.25rem calc(0.75rem + var(--safe-area-bottom));
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   z-index: 1;
+  overflow: hidden;
 }
 
 .header {
@@ -116,15 +117,15 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(0.5rem, 1.5vh, 1.25rem);
 }
 
 .btn-back {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 1.25rem;
-  padding: 0.6rem 0.8rem;
-  border-radius: 16px;
+  font-size: 1.15rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 14px;
   cursor: pointer;
   color: var(--color-text-light);
   line-height: 1;
@@ -139,20 +140,20 @@ onMounted(async () => {
 .category-indicator {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   background: var(--color-bg-card);
   border: 1px solid var(--cat-color, var(--color-bg-card-border));
   box-shadow: 0 0 10px rgba(0,0,0,0.1), 0 0 4px var(--cat-color);
-  padding: 0.5rem 1.25rem;
-  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  border-radius: 16px;
 }
 
 .cat-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .cat-name {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: 0.5px;
 }
@@ -160,17 +161,19 @@ onMounted(async () => {
 .levels-container {
   width: 100%;
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(0.5rem, 1.5vh, 1.25rem);
+  overflow-y: auto;
 }
 
 .page-title {
-  font-size: 1.75rem;
+  font-size: clamp(1.4rem, 4.5vw, 1.75rem);
   font-weight: 800;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(0.5rem, 1.5vh, 1.25rem);
   text-transform: uppercase;
   letter-spacing: -0.5px;
   color: var(--color-accent-star);
@@ -180,17 +183,17 @@ onMounted(async () => {
 .levels-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: clamp(0.5rem, 1.5vh, 1rem);
   width: 100%;
 }
 
 .footer-tip {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: var(--color-text-dim);
   font-weight: 500;
   background: rgba(255, 255, 255, 0.03);
-  padding: 0.4rem 1.2rem;
-  border-radius: 12px;
+  padding: 0.35rem 1rem;
+  border-radius: 10px;
   text-align: center;
 }
 </style>

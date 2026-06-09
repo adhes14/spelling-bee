@@ -46,7 +46,9 @@
         <WritingLine 
           v-else
           :value="typedText"
+          :cursor-index="cursorIndex"
           placeholder="Type the word..."
+          @cursor-tap="handleCursorTap"
         />
       </div>
     </main>
@@ -107,6 +109,7 @@ const poolLetters = ref([])
 
 // Sublevel 3 states
 const typedText = ref('')
+const cursorIndex = ref(0)
 
 // Shake state
 const shakeActive = ref(false)
@@ -114,6 +117,10 @@ const shakeActive = ref(false)
 // Dictation state
 const dictationState = ref('idle')  // 'idle' | 'running' | 'done'
 const dictationTimers = ref([])
+
+const handleCursorTap = (index) => {
+  cursorIndex.value = index
+}
 
 // Generate letter pool (shuffled word letters + distractors if level 2)
 const setupGame = () => {
@@ -125,6 +132,7 @@ const setupGame = () => {
   solvedSlots.value = {}
   activeSlotIndex.value = 0
   typedText.value = ''
+  cursorIndex.value = 0
   shakeActive.value = false
 
   const word = wordString.value
@@ -275,7 +283,10 @@ const handleKeyboardPress = (keyValue) => {
   const word = wordString.value
 
   if (keyValue === 'backspace') {
-    typedText.value = typedText.value.slice(0, -1)
+    if (cursorIndex.value > 0) {
+      typedText.value = typedText.value.slice(0, cursorIndex.value - 1) + typedText.value.slice(cursorIndex.value)
+      cursorIndex.value--
+    }
   } else if (keyValue === 'enter') {
     // REQ-DICT-5: ignore Enter during dictation sequence
     if (gameStore.currentSublevel === 4 && dictationState.value === 'running') {
@@ -295,12 +306,45 @@ const handleKeyboardPress = (keyValue) => {
       playErrorSound()
       gameStore.incrementError()
       typedText.value = '' // Clear input as per specs
+      cursorIndex.value = 0
     }
   } else {
     // Letter keys
     if (typedText.value.length < word.length) {
-      typedText.value += keyValue
+      typedText.value = typedText.value.slice(0, cursorIndex.value) + keyValue + typedText.value.slice(cursorIndex.value)
+      cursorIndex.value++
     }
+  }
+}
+
+// Physical keyboard navigation & typing
+const handlePhysicalKeyDown = (event) => {
+  if (gameStore.currentSublevel <= 2) return
+
+  const key = event.key
+
+  if (key === 'ArrowLeft') {
+    event.preventDefault()
+    if (cursorIndex.value > 0) {
+      cursorIndex.value--
+    }
+  } else if (key === 'ArrowRight') {
+    event.preventDefault()
+    if (cursorIndex.value < typedText.value.length) {
+      cursorIndex.value++
+    }
+  } else if (key === 'Backspace') {
+    event.preventDefault()
+    handleKeyboardPress('backspace')
+  } else if (key === 'Enter') {
+    event.preventDefault()
+    handleKeyboardPress('enter')
+  } else if (key.length === 1 && /^[a-zA-Z ]$/.test(key)) {
+    event.preventDefault()
+    if (gameStore.currentSublevel !== 4) {
+      playLetter(key.toLowerCase())
+    }
+    handleKeyboardPress(key.toLowerCase())
   }
 }
 
@@ -328,11 +372,13 @@ onMounted(async () => {
     await gameStore.prepareSession()
   }
   setupGame()
+  window.addEventListener('keydown', handlePhysicalKeyDown)
 })
 
 onBeforeUnmount(() => {
   dictationTimers.value.forEach(clearTimeout)
   dictationTimers.value = []
+  window.removeEventListener('keydown', handlePhysicalKeyDown)
 })
 </script>
 
