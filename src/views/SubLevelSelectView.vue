@@ -167,6 +167,8 @@ onMounted(async () => {
   justify-content: center;
   margin-bottom: clamp(0.5rem, 1.5vh, 1.25rem);
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem 0.25rem;
 }
 
 .page-title {

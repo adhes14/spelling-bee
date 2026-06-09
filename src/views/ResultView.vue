@@ -2,15 +2,16 @@
   <div class="result-view">
     <!-- Icon/Emoji -->
     <div class="celebration-header">
-      <div class="emoji-badge pop-in">✅</div>
+      <div class="emoji-badge pop-in" v-if="isFailure">💡</div>
+      <div class="emoji-badge pop-in" v-else>✅</div>
     </div>
 
     <!-- Main Results Details Card -->
     <div class="results-card glass-panel pop-in" :style="{ animationDelay: '200ms' }">
       <!-- Target Spelt Word display -->
       <div class="word-reveal">
-        <p class="reveal-label">You spelled:</p>
-        <h2 class="word-text">{{ wordString.toUpperCase() }}</h2>
+        <p class="reveal-label">{{ isFailure ? 'The word was:' : 'You spelled:' }}</p>
+        <h2 class="word-text" :class="{ 'failed-word': isFailure }">{{ wordString.toUpperCase() }}</h2>
       </div>
     </div>
 
@@ -38,6 +39,7 @@ const gameStore = useGameStore()
 const { speakWord } = useWordAudio()
 
 const wordString = gameStore.currentWordObj?.word || ''
+const isFailure = computed(() => gameStore.errorCount >= 4)
 const categoryId = computed(() => {
   const cat = gameStore.currentCategory
   return cat ? (cat.id_cat || cat.id || '') : ''
@@ -121,6 +123,11 @@ onMounted(() => {
   line-height: 1.1;
   text-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
   margin-top: 0.5rem;
+}
+
+.word-text.failed-word {
+  color: var(--color-accent-gold);
+  text-shadow: 0 0 10px rgba(255, 184, 0, 0.25);
 }
 
 /* Actions Panel */

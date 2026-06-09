@@ -40,9 +40,9 @@ export function useLetterAudio() {
   }
 
   /**
-   * Play the letter names of a word sequentially with 1500ms gaps.
+   * Play the letter names of a word sequentially with 2000ms gaps.
    * Letters [a-zA-Z] are spoken via playLetter, spaces insert a
-   * silent 1500ms gap, and any other character is skipped.
+   * silent 2000ms gap, and any other character is skipped.
    *
    * @param {string} word - The word whose letters to spell
    * @returns {{ promise: Promise<void>, timers: number[] }} Promise that
@@ -56,11 +56,11 @@ export function useLetterAudio() {
         let delay = 0
         for (const ch of word) {
           if (ch === ' ') {
-            delay += 1500
+            delay += 2000
           } else if (/^[a-z]$/i.test(ch)) {
             const t = setTimeout(() => playLetter(ch), delay)
             timers.push(t)
-            delay += 1500
+            delay += 2000
           }
           // non-letter, non-space → skip (catalog has none)
         }

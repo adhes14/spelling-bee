@@ -241,6 +241,12 @@ const handleLetterDrop = ({ index, letter }) => {
     triggerShake()
     playErrorSound()
     gameStore.incrementError()
+    if (gameStore.errorCount >= 4) {
+      setTimeout(() => {
+        gameStore.finishWord()
+        router.push({ name: 'result' })
+      }, 1200)
+    }
   }
 }
 
@@ -305,8 +311,15 @@ const handleKeyboardPress = (keyValue) => {
       triggerShake()
       playErrorSound()
       gameStore.incrementError()
-      typedText.value = '' // Clear input as per specs
-      cursorIndex.value = 0
+      if (gameStore.errorCount >= 4) {
+        setTimeout(() => {
+          gameStore.finishWord()
+          router.push({ name: 'result' })
+        }, 1200)
+      } else {
+        typedText.value = '' // Clear input as per specs
+        cursorIndex.value = 0
+      }
     }
   } else {
     // Letter keys
