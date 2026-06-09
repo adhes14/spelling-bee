@@ -264,10 +264,10 @@ export const useGameStore = defineStore('game', () => {
       const recordMap = new Map(records.map(r => [`${r.word}||${r.sublevel}`, r.score || 0]))
 
       let totalScore = 0
-      const totalPossibleEntries = list.length * 3
+      const totalPossibleEntries = list.length * 4
 
       for (const w of list) {
-        for (let sl = 1; sl <= 3; sl++) {
+        for (let sl = 1; sl <= 4; sl++) {
           const scoreVal = recordMap.get(`${w.word}||${sl}`) || 0
           totalScore += scoreVal
         }

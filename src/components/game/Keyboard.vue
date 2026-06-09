@@ -25,6 +25,10 @@ import { useLetterAudio } from '@/composables/useLetterAudio'
 
 const emit = defineEmits(['key-press'])
 
+const props = defineProps({
+  playLetterAudio: { type: Boolean, default: true }
+})
+
 const { playLetter } = useLetterAudio()
 const activeKey = ref(null)
 
@@ -76,7 +80,7 @@ const handleKeyPress = (key) => {
   }, 100)
 
   // Voice feedback
-  if (key.type === 'letter') {
+  if (key.type === 'letter' && props.playLetterAudio) {
     playLetter(key.value)
   }
 

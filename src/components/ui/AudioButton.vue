@@ -1,7 +1,8 @@
 <template>
   <button 
     class="btn-audio btn-bouncy" 
-    :class="{ speaking: speaking }"
+    :class="{ speaking, disabled: disabled }"
+    :disabled="disabled"
     @click="speak"
     aria-label="Listen to word"
   >
@@ -15,13 +16,20 @@ import { useWordAudio } from '@/composables/useWordAudio'
 
 const props = defineProps({
   word: { type: String, required: true },
-  category: { type: String, required: true }
+  category: { type: String, required: true },
+  disabled: { type: Boolean, default: false },
+  onSpeak: { type: Function, default: null }
 })
 
 const { speakWord, speaking } = useWordAudio()
 
 const speak = () => {
-  speakWord(props.word, props.category)
+  if (props.disabled) return
+  if (props.onSpeak) {
+    props.onSpeak()
+  } else {
+    speakWord(props.word, props.category)
+  }
 }
 </script>
 
@@ -93,5 +101,12 @@ const speak = () => {
     transform: scale(1.3);
     opacity: 0;
   }
+}
+
+.btn-audio.disabled {
+  opacity: 0.35;
+  filter: grayscale(0.6);
+  pointer-events: none;
+  cursor: not-allowed;
 }
 </style>

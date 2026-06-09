@@ -45,6 +45,16 @@
           icon="🧠"
           @select="selectLevel(3)"
         />
+
+        <SubLevelCard
+          :level="4"
+          title="Dictation"
+          description="Hear letter names one-by-one and spell the word."
+          :progress-percent="level4Progress.percent"
+          color="var(--color-accent-green)"
+          icon="✍️"
+          @select="selectLevel(4)"
+        />
       </div>
     </div>
 
@@ -67,6 +77,7 @@ const gameStore = useGameStore()
 const level1Progress = ref({ percent: 0, rated: 0, total: 0 })
 const level2Progress = ref({ percent: 0, rated: 0, total: 0 })
 const level3Progress = ref({ percent: 0, rated: 0, total: 0 })
+const level4Progress = ref({ percent: 0, rated: 0, total: 0 })
 
 const goBack = () => {
   gameStore.reset()
@@ -84,6 +95,7 @@ onMounted(async () => {
   level1Progress.value = await gameStore.getSublevelProgress(1)
   level2Progress.value = await gameStore.getSublevelProgress(2)
   level3Progress.value = await gameStore.getSublevelProgress(3)
+  level4Progress.value = await gameStore.getSublevelProgress(4)
 })
 </script>
 

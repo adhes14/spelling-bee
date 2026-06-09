@@ -22,7 +22,12 @@
 
       <!-- Play Word Audio Button -->
       <div class="audio-trigger-wrapper">
-        <AudioButton :word="wordString" :category="currentCategoryId" />
+        <AudioButton
+          :word="wordString"
+          :category="currentCategoryId"
+          :disabled="gameStore.currentSublevel === 4 && dictationState === 'running'"
+          :on-speak="gameStore.currentSublevel === 4 ? replayDictation : null"
+        />
         <p class="audio-hint">Tap to listen</p>
       </div>
 
@@ -54,9 +59,10 @@
         :letters="poolLetters"
       />
 
-      <!-- Sublevel 3: Virtual Keyboard -->
+      <!-- Sublevel 3 & 4: Virtual Keyboard -->
       <Keyboard 
         v-else
+        :play-letter-audio="gameStore.currentSublevel !== 4"
         @key-press="handleKeyboardPress"
       />
     </footer>
@@ -64,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
 import { useWordAudio } from '@/composables/useWordAudio'
@@ -81,14 +87,15 @@ import AudioButton from '@/components/ui/AudioButton.vue'
 const router = useRouter()
 const gameStore = useGameStore()
 const { speakWord } = useWordAudio()
-const { playLetter } = useLetterAudio()
+const { playLetter, playLetterSequence } = useLetterAudio()
 const { playSuccessSound, playErrorSound, playClickSound } = useAudioFeedback()
 
 const wordString = computed(() => gameStore.currentWordObj?.word || '')
 const levelName = computed(() => {
   if (gameStore.currentSublevel === 1) return 'Easy'
   if (gameStore.currentSublevel === 2) return 'Medium'
-  return 'Advanced'
+  if (gameStore.currentSublevel === 3) return 'Advanced'
+  return 'Dictation'
 })
 
 const currentCategoryId = computed(() => gameStore.currentCategory?.id_cat || gameStore.currentCategory?.id || '')
@@ -104,8 +111,17 @@ const typedText = ref('')
 // Shake state
 const shakeActive = ref(false)
 
+// Dictation state
+const dictationState = ref('idle')  // 'idle' | 'running' | 'done'
+const dictationTimers = ref([])
+
 // Generate letter pool (shuffled word letters + distractors if level 2)
 const setupGame = () => {
+  // Cancel any pending dictation timers from previous word
+  dictationTimers.value.forEach(clearTimeout)
+  dictationTimers.value = []
+  dictationState.value = 'idle'
+
   solvedSlots.value = {}
   activeSlotIndex.value = 0
   typedText.value = ''
@@ -164,10 +180,21 @@ const setupGame = () => {
 
   findNextSlot()
 
-  // Proactively say the word shortly after view setup
-  setTimeout(() => {
-    speakWord(word, currentCategoryId.value)
-  }, 600)
+  // Proactively say the word / play dictation sequence shortly after view setup
+  if (gameStore.currentSublevel === 4) {
+    dictationState.value = 'running'
+    setTimeout(() => {
+      const { promise, timers } = playLetterSequence(word)
+      dictationTimers.value = timers
+      promise.then(() => {
+        dictationState.value = 'done'
+      })
+    }, 600)
+  } else {
+    setTimeout(() => {
+      speakWord(word, currentCategoryId.value)
+    }, 600)
+  }
 }
 
 // Fisher-Yates shuffle
@@ -231,6 +258,18 @@ const checkSublevelCompleted = () => {
   }
 }
 
+// Dictation replay: replay letter sequence on AudioButton tap
+const replayDictation = () => {
+  dictationTimers.value.forEach(clearTimeout)
+  dictationTimers.value = []
+  dictationState.value = 'running'
+  const { promise, timers } = playLetterSequence(wordString.value)
+  dictationTimers.value = timers
+  promise.then(() => {
+    dictationState.value = 'done'
+  })
+}
+
 // Sublevel 3 logic: Keyboard presses
 const handleKeyboardPress = (keyValue) => {
   const word = wordString.value
@@ -238,6 +277,10 @@ const handleKeyboardPress = (keyValue) => {
   if (keyValue === 'backspace') {
     typedText.value = typedText.value.slice(0, -1)
   } else if (keyValue === 'enter') {
+    // REQ-DICT-5: ignore Enter during dictation sequence
+    if (gameStore.currentSublevel === 4 && dictationState.value === 'running') {
+      return
+    }
     // Submit check
     if (typedText.value.toLowerCase() === word.toLowerCase()) {
       // Correct spelling!
@@ -285,6 +328,11 @@ onMounted(async () => {
     await gameStore.prepareSession()
   }
   setupGame()
+})
+
+onBeforeUnmount(() => {
+  dictationTimers.value.forEach(clearTimeout)
+  dictationTimers.value = []
 })
 </script>
 
@@ -356,6 +404,7 @@ onMounted(async () => {
 .level-1 { background-color: var(--color-accent-cyan); }
 .level-2 { background-color: var(--color-accent-pink); }
 .level-3 { background-color: var(--color-accent-purple); }
+.level-4 { background-color: var(--color-accent-green); }
 
 .audio-trigger-wrapper {
   display: flex;
