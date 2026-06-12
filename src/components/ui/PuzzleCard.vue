@@ -1,6 +1,6 @@
 <template>
   <div class="puzzle-card glass-panel" :style="{ '--card-accent': category.color }">
-    <div class="puzzle-grid">
+    <div class="puzzle-grid" @click="emit('click-image')">
       <div 
         v-for="sublevel in [1, 2, 3, 4]" 
         :key="sublevel"
@@ -62,9 +62,12 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['click-image'])
+
 const unlockedCount = computed(() => {
   return props.piecesUnlocked.filter(Boolean).length
 })
+
 
 function getBackgroundPosition(sublevel) {
   // Sublevels:
@@ -110,7 +113,20 @@ function getBackgroundPosition(sublevel) {
   overflow: hidden;
   background: #060515;
   border: 2px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+.puzzle-grid:hover {
+  transform: scale(1.02);
+  border-color: var(--card-accent);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.puzzle-grid:active {
+  transform: scale(0.98);
+}
+
 
 .puzzle-piece {
   position: relative;

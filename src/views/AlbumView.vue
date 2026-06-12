@@ -24,6 +24,7 @@
             :key="cat.id" 
             :category="cat" 
             :pieces-unlocked="cat.pieces.map(p => p.unlocked)"
+            @click-image="openFullscreen(cat)"
           />
         </div>
         
@@ -32,6 +33,64 @@
         </div>
       </div>
     </div>
+
+    <!-- Fullscreen Image Modal -->
+    <Transition name="fade">
+      <div 
+        v-if="fullscreenCategory" 
+        class="fullscreen-modal-overlay" 
+        @click.self="closeFullscreen"
+      >
+        <div class="fullscreen-modal glass-panel pop-in" :style="{ '--card-accent': fullscreenCategory.color }">
+          <button class="btn-close-modal" @click="closeFullscreen" aria-label="Close fullscreen">×</button>
+          
+          <div class="fullscreen-grid">
+            <div 
+              v-for="sublevel in [1, 2, 3, 4]" 
+              :key="sublevel"
+              class="fullscreen-piece"
+              :class="{ 'is-locked': !fullscreenCategory.pieces[sublevel - 1].unlocked }"
+            >
+              <div 
+                class="fullscreen-piece-image"
+                :style="{
+                  backgroundImage: `url(${fullscreenCategory.image})`,
+                  backgroundPosition: getBackgroundPosition(sublevel)
+                }"
+              ></div>
+              
+              <div v-if="!fullscreenCategory.pieces[sublevel - 1].unlocked" class="fullscreen-piece-overlay">
+                <div class="fullscreen-lock-icon-wrapper">
+                  <span class="fullscreen-lock-icon">🔒</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fullscreen-footer">
+            <div class="fullscreen-category-info">
+              <span class="fullscreen-category-icon">{{ fullscreenCategory.icon }}</span>
+              <span class="fullscreen-category-name">{{ fullscreenCategory.name }}</span>
+            </div>
+            <div 
+              class="fullscreen-completion-badge" 
+              :class="{ 'is-complete': fullscreenCategory.unlockedCount === 4 }"
+            >
+              {{ fullscreenCategory.unlockedCount }}/4 Pieces
+            </div>
+          </div>
+          
+          <div class="fullscreen-status-message">
+            <p v-if="fullscreenCategory.unlockedCount === 4" class="msg-complete pop-in">
+              Amazing! You unlocked the entire picture! 🎉🏆
+            </p>
+            <p v-else class="msg-incomplete">
+              Reach 100% in sublevels of this category to unlock the locked pieces! 🚀
+            </p>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -50,6 +109,26 @@ const loading = ref(true)
 const totalUnlocked = computed(() => {
   return albumData.value.reduce((sum, cat) => sum + cat.unlockedCount, 0)
 })
+
+const fullscreenCategory = ref(null)
+
+function openFullscreen(category) {
+  fullscreenCategory.value = category
+}
+
+function closeFullscreen() {
+  fullscreenCategory.value = null
+}
+
+function getBackgroundPosition(sublevel) {
+  switch (sublevel) {
+    case 1: return '0% 0%'
+    case 2: return '100% 0%'
+    case 3: return '0% 100%'
+    case 4: return '100% 100%'
+    default: return '0% 0%'
+  }
+}
 
 function goBack() {
   router.push({ name: 'home' })
@@ -187,5 +266,185 @@ onMounted(async () => {
   line-height: 1.5;
   color: var(--color-text-light);
   font-weight: 500;
+}
+
+/* Fullscreen modal styling */
+.fullscreen-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 7, 33, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.fullscreen-modal {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px 20px 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px var(--card-accent);
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.btn-close-modal:hover {
+  color: var(--color-text-light);
+  transform: scale(1.1);
+}
+
+.fullscreen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  aspect-ratio: 1/1;
+  width: 100%;
+  max-width: 300px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #060515;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  margin: 16px 0 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.fullscreen-piece {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fullscreen-piece-image {
+  width: 100%;
+  height: 100%;
+  background-size: 200% 200%;
+  background-repeat: no-repeat;
+}
+
+.fullscreen-piece-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 7, 33, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-lock-icon-wrapper {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.fullscreen-lock-icon {
+  font-size: 18px;
+}
+
+.fullscreen-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 8px;
+  margin-bottom: 16px;
+}
+
+.fullscreen-category-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fullscreen-category-icon {
+  font-size: 24px;
+}
+
+.fullscreen-category-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-light);
+}
+
+.fullscreen-completion-badge {
+  font-size: 14px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-dim);
+}
+
+.fullscreen-completion-badge.is-complete {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.fullscreen-status-message {
+  width: 100%;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.fullscreen-status-message p {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.msg-complete {
+  color: var(--color-accent-star);
+  font-weight: 700 !important;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.msg-incomplete {
+  color: var(--color-text-dim);
+}
+
+/* Modal fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
