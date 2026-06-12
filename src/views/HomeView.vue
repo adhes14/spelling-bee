@@ -61,8 +61,11 @@
       </div>
     </div>
 
-    <!-- Parent zone shortcut -->
+    <!-- Footer actions: Album and Parents Zone -->
     <div class="footer-actions">
+      <button class="btn-album btn-bouncy" @click="openAlbum">
+        🧩 My Album
+      </button>
       <button class="btn-parents" @click="openParentsZone">
         <span class="icon">⚙️</span> Parents Zone
       </button>
@@ -134,6 +137,10 @@ const loadCategoryProgress = async () => {
 const selectCategory = (catId) => {
   gameStore.setCategory(catId)
   router.push({ name: 'select-level' })
+}
+
+const openAlbum = () => {
+  router.push({ name: 'album' })
 }
 
 const openParentsZone = () => {
@@ -271,29 +278,55 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-/* Footer parents button */
+/* Footer action buttons */
 .footer-actions {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   margin-top: auto;
   padding-top: 1rem;
   flex-shrink: 0;
 }
 
+.btn-album {
+  flex: 1;
+  background: linear-gradient(135deg, var(--color-accent-purple) 0%, #7e22ce 100%);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  padding: 0.65rem 1rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-album:hover {
+  transform: scale(1.02);
+}
+
 .btn-parents {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border-radius: 14px;
   color: var(--color-text-dim);
   font-family: var(--font-main);
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-parents:hover, .btn-parents:active {

@@ -1,10 +1,10 @@
 export const categories = [
-  { id: 'places', name: 'Places', icon: '✈️', color: 'var(--color-accent-cyan)' },
-  { id: 'music', name: 'Music', icon: '🎵', color: 'var(--color-accent-pink)' },
-  { id: 'sports', name: 'Sports', icon: '⚽', color: 'var(--color-accent-purple)' },
-  { id: 'time', name: 'Time', icon: '⏰', color: 'var(--color-accent-star)' },
-  { id: 'feelings', name: 'Feelings', icon: '😊', color: 'var(--color-accent-pink)' },
-  { id: 'daily', name: 'Daily Life', icon: '🏡', color: 'var(--color-accent-cyan)' }
+  { id: 'places', name: 'Places', icon: '✈️', color: 'var(--color-accent-cyan)', image: '/images/puzzle_places.png' },
+  { id: 'music', name: 'Music', icon: '🎵', color: 'var(--color-accent-pink)', image: '/images/puzzle_music.png' },
+  { id: 'sports', name: 'Sports', icon: '⚽', color: 'var(--color-accent-purple)', image: '/images/puzzle_sports.png' },
+  { id: 'time', name: 'Time', icon: '⏰', color: 'var(--color-accent-star)', image: '/images/puzzle_time.png' },
+  { id: 'feelings', name: 'Feelings', icon: '😊', color: 'var(--color-accent-pink)', image: '/images/puzzle_feelings.png' },
+  { id: 'daily', name: 'Daily Life', icon: '🏡', color: 'var(--color-accent-cyan)', image: '/images/puzzle_daily.png' }
 ]
 
 export const words = [

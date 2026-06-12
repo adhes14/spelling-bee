@@ -72,6 +72,11 @@ const router = createRouter({
       }
     },
     {
+      path: '/album',
+      name: 'album',
+      component: () => import('@/views/AlbumView.vue')
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }

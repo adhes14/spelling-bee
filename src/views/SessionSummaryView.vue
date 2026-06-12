@@ -64,18 +64,51 @@
         🏠 Main Menu
       </button>
     </div>
+
+    <!-- Celebration Overlay for Puzzle Unlock -->
+    <div v-if="newlyUnlocked" class="celebration-overlay">
+      <StarBurst />
+      <div class="celebration-card glass-panel pop-in">
+        <h2 class="celebration-title">Puzzle Piece Unlocked! 🧩</h2>
+        <p class="celebration-subtitle">
+          You completed Level {{ currentSublevel }} in {{ currentCategory.name }}!
+        </p>
+        
+        <div class="celebration-puzzle-wrapper">
+          <PuzzleCard 
+            :category="currentCategory" 
+            :pieces-unlocked="piecesUnlocked"
+            :newly-unlocked-sublevel="currentSublevel"
+          />
+        </div>
+        
+        <button class="btn-celebration-close btn-bouncy" @click="dismissCelebration">
+          Awesome! 🌟
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
+import { useAlbumStore } from '@/stores/albumStore'
 import { useAudioFeedback } from '@/composables/useAudioFeedback'
+import PuzzleCard from '@/components/ui/PuzzleCard.vue'
+import StarBurst from '@/components/ui/StarBurst.vue'
 
 const router = useRouter()
 const gameStore = useGameStore()
+const albumStore = useAlbumStore()
 const { playSuccessSound } = useAudioFeedback()
+
+const newlyUnlocked = ref(false)
+const piecesUnlocked = ref([false, false, false, false])
+
+const currentCategory = computed(() => gameStore.currentCategory)
+const currentSublevel = computed(() => gameStore.currentSublevel)
 
 const totalCount = computed(() => gameStore.sessionWords.length)
 const completedCount = computed(() => {
@@ -118,8 +151,32 @@ const goToMenu = () => {
   router.push({ name: 'home' })
 }
 
-onMounted(() => {
+const dismissCelebration = () => {
+  newlyUnlocked.value = false
+}
+
+onMounted(async () => {
   playSuccessSound()
+  
+  if (currentCategory.value) {
+    const catId = currentCategory.value.id_cat || currentCategory.value.id
+    const sublevel = currentSublevel.value
+    
+    try {
+      // Check and unlock piece
+      const unlocked = await albumStore.checkAndUnlockPiece(catId, sublevel)
+      
+      // Load current album pieces to display
+      const albumPieces = await albumStore.getAlbumForCategory(catId)
+      piecesUnlocked.value = albumPieces.map(p => p.unlocked)
+      
+      if (unlocked) {
+        newlyUnlocked.value = true
+      }
+    } catch (err) {
+      console.error('Error handling album unlock check:', err)
+    }
+  }
 })
 </script>
 
@@ -325,5 +382,70 @@ onMounted(() => {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* Celebration Overlay Styles */
+.celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(8, 7, 33, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 1.5rem;
+}
+
+.celebration-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.celebration-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffe066 0%, #f59e0b 50%, #fef08a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.celebration-subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-dim);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.celebration-puzzle-wrapper {
+  width: 200px;
+  margin: 8px 0;
+}
+
+.btn-celebration-close {
+  width: 100%;
+  background: linear-gradient(135deg, var(--color-accent-green) 0%, #047857 100%);
+  border: none;
+  border-radius: 16px;
+  color: white;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  cursor: pointer;
 }
 </style>

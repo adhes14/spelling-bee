@@ -29,6 +29,10 @@ db.version(4).stores({
   await tx.table('audios_blob').clear()
 })
 
+db.version(5).stores({
+  album_progreso: '++id, category, sublevel, unlockedAt, [category+sublevel]'
+})
+
 // Request persistent storage
 if (typeof window !== 'undefined' && navigator.storage && navigator.storage.persist) {
   navigator.storage.persist().then((persisted) => {
