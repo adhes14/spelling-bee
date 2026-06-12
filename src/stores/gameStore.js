@@ -156,13 +156,13 @@ export const useGameStore = defineStore('game', () => {
         // Calculate score increment
         let increment = 0
         if (errorCount.value === 0) {
-          increment = 20
+          increment = 40
         } else if (errorCount.value === 1) {
-          increment = 15
+          increment = 30
         } else if (errorCount.value === 2) {
-          increment = 10
+          increment = 20
         } else if (errorCount.value === 3) {
-          increment = 5
+          increment = 10
         }
 
         // Fetch current score from DB
