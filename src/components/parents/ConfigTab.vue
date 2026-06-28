@@ -104,7 +104,8 @@
           @click="handleExport" 
           :disabled="exporting"
         >
-          {{ exporting ? '📦 Exporting...' : '📥 Export Database & Progress' }}
+          <span v-if="exporting" class="spinner-btn"></span>
+          <span>{{ exporting ? 'Exporting...' : '📥 Export Database & Progress' }}</span>
         </button>
       </div>
       <p v-if="exportMessage" class="config-helper" :class="exportStatus">
@@ -152,7 +153,8 @@
             @click="handleImport" 
             :disabled="confirmText !== 'CONFIRM' || importing"
           >
-            {{ importing ? 'Restoring...' : 'Restore Backup' }}
+            <span v-if="importing" class="spinner-btn"></span>
+            <span>{{ importing ? 'Restoring...' : 'Restore Backup' }}</span>
           </button>
         </div>
       </div>
@@ -598,6 +600,10 @@ async function handleImport() {
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .cancel-btn {
@@ -621,6 +627,21 @@ async function handleImport() {
 .restore-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.spinner-btn {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin-btn 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin-btn {
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 480px) {
