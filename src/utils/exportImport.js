@@ -98,7 +98,38 @@ export async function importDatabase(db, zipFile) {
     console.warn('Failed to retrieve existing TTS API key:', err)
   }
 
-  // 2. Clear tables and insert imported data in a transaction
+  // 2. Read and prepare all audio files from ZIP before starting the transaction
+  // (to avoid yielding the event loop with non-IndexedDB promises inside the Dexie transaction)
+  const audiosToRestore = []
+  if (tables.audios_blob) {
+    for (const audio of tables.audios_blob) {
+      const restored = { ...audio }
+      
+      // Convert dates
+      if (restored.createdAt) restored.createdAt = new Date(restored.createdAt)
+      if (restored.lastPlayed) restored.lastPlayed = new Date(restored.lastPlayed)
+
+      // Read blob file from ZIP if present
+      if (restored.blobRef) {
+        const zipFileEntry = zip.file(restored.blobRef)
+        if (zipFileEntry) {
+          const arrayBuffer = await zipFileEntry.async('arraybuffer')
+          restored.blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
+        } else {
+          console.warn(`Audio file not found in ZIP: ${restored.blobRef}`)
+          restored.blob = null
+          restored.status = 'failed'
+        }
+        delete restored.blobRef
+      } else {
+        restored.blob = null
+      }
+
+      audiosToRestore.push(restored)
+    }
+  }
+
+  // 3. Clear tables and insert imported data in a transaction
   await db.transaction('rw', [
     db.diccionario_palabras,
     db.categorias,
@@ -158,33 +189,7 @@ export async function importDatabase(db, zipFile) {
     }
 
     // Restore audios_blob
-    if (tables.audios_blob) {
-      const audiosToRestore = []
-      for (const audio of tables.audios_blob) {
-        const restored = { ...audio }
-        
-        // Convert dates
-        if (restored.createdAt) restored.createdAt = new Date(restored.createdAt)
-        if (restored.lastPlayed) restored.lastPlayed = new Date(restored.lastPlayed)
-
-        // Read blob file from ZIP if present
-        if (restored.blobRef) {
-          const zipFileEntry = zip.file(restored.blobRef)
-          if (zipFileEntry) {
-            const arrayBuffer = await zipFileEntry.async('arraybuffer')
-            restored.blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
-          } else {
-            console.warn(`Audio file not found in ZIP: ${restored.blobRef}`)
-            restored.blob = null
-            restored.status = 'failed'
-          }
-          delete restored.blobRef
-        } else {
-          restored.blob = null
-        }
-
-        audiosToRestore.push(restored)
-      }
+    if (audiosToRestore.length > 0) {
       await db.audios_blob.bulkAdd(audiosToRestore)
     }
   })
