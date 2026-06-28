@@ -135,7 +135,18 @@ export const useDictionaryStore = defineStore('dictionary', () => {
 
   // Deletes a custom word
   async function deleteWord(id) {
-    await db.diccionario_palabras.delete(id)
+    try {
+      const wordObj = await db.diccionario_palabras.get(id)
+      if (wordObj) {
+        await db.transaction('rw', [db.diccionario_palabras, db.audios_blob, db.progreso_usuario], async () => {
+          await db.diccionario_palabras.delete(id)
+          await db.audios_blob.where({ word: wordObj.word, category: wordObj.category }).delete()
+          await db.progreso_usuario.where({ word: wordObj.word, category: wordObj.category }).delete()
+        })
+      }
+    } catch (err) {
+      console.error('Failed to delete word and its associated data:', err)
+    }
     await loadAll()
   }
 
